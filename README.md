@@ -1,7 +1,203 @@
 # skillscope
 
-A fast, pluggable TUI for inspecting SKILL.md files across every agentic-CLI
-harness on your machine, broken down by scope (user / project / project-local)
-and by harness (Claude Code, Codex CLI, Cursor, OpenCode, Antigravity).
+A fast, pluggable TUI for inspecting `SKILL.md` files across every agentic-CLI
+harness on your machine. See your skills at a glance — broken down by scope
+(user / project / project-local) and harness (Claude Code, Codex CLI, Cursor,
+OpenCode, Antigravity) — and move them between scopes in 1–2 keystrokes.
 
-Status: empty scaffold. See the goal prompt for the spec.
+```
+┌ Matrix ┐ Tree   Venn   Diff   Heatmap   Gallery
+skill                claude/user  claude/proj  codex/user  cursor/user  …
+test-skill           ●            ·            ·           ·
+multi-scope-skill    ●            ◐            ·           ·
+codex-skill          ·            ·            ●           ·
+…
+harnesses:[claude]  scope:user  q:"test"  3/14 skills
+```
+
+## Install
+
+```sh
+go install github.com/sethgho/skillscope/cmd/skillscope@latest
+```
+
+Or from source:
+
+```sh
+git clone https://github.com/sethgho/skillscope
+cd skillscope
+go install ./cmd/skillscope
+```
+
+Runs on Linux and macOS, Go 1.22+. Single static binary, no CGO.
+
+## Quick start
+
+Run it from anywhere:
+
+```sh
+skillscope
+```
+
+It scans your home dir + the current git repo (if any) and shows every skill
+across every harness. From inside this repo:
+
+```sh
+make demo
+```
+
+boots the TUI pointed at `testdata/`.
+
+## Keymap
+
+### Global
+
+| Key | Action |
+| --- | ------ |
+| `q` / `Ctrl+C` | quit |
+| `?` | help overlay |
+| `/` | fuzzy search |
+| `Esc` | clear filter |
+| `1`–`9` | jump to view by index |
+| `v` / `V` | cycle views forward / back |
+| `f` | cycle harness filter |
+| `F` | clear harness filter |
+| `s` | cycle scope-kind filter |
+| `g` | toggle "shadowed only" |
+| `Tab` | move focus between panels |
+| `R` | re-scan filesystem |
+
+### Skill actions (on highlighted skill)
+
+| Key | Action |
+| --- | ------ |
+| `p` | preview pane: off → raw → rendered |
+| `e` | open in `$EDITOR` |
+| `c` | copy to scope (numbered picker, then `1`–`9`) |
+| `m` | move to scope (same picker) |
+| `d` | delete (confirm with `y`) |
+| `y` | yank skill path |
+
+Picker shortcut: e.g. `c 3` = "copy to scope 3."
+
+## Flags
+
+| Flag | Meaning |
+| ---- | ------- |
+| `--version` | print version and exit |
+| `--json` | dump all skills as JSON to stdout and exit |
+| `--demo-home <dir>` | use `<dir>` as the simulated home dir |
+| `--demo-repo <dir>` | use `<dir>` as the simulated repo root |
+
+## Views
+
+1. **Matrix** — rows = skills, columns = (harness × scope). `●` present,
+   `◐` shadowed, `·` absent.
+2. **Tree** — collapsible Harness → Scope → Skill.
+3. **Venn** — User / Project / Project-Local intersection for a single
+   harness, with selected skill's membership lit up.
+4. **Diff** — side-by-side frontmatter + body for skills in multiple scopes
+   within one harness.
+5. **Heatmap** — harness × scope grid shaded by skill count.
+6. **Gallery** — lists every registered view (proves the plugin surface works).
+
+## Adding a harness
+
+Drop a single file at `internal/harness/<id>/harness.go`. It self-registers
+in `init()`; no edits to the core.
+
+```go
+package myharness
+
+import (
+    "path/filepath"
+    "github.com/charmbracelet/lipgloss"
+    "github.com/sethgho/skillscope/internal/harness"
+)
+
+type h struct{}
+
+func (h) ID() string            { return "myharness" }
+func (h) Name() string          { return "My Harness" }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#FF66CC") }
+
+func (h) Scopes(ctx harness.Context) []harness.Scope {
+    scopes := []harness.Scope{{
+        Harness: "myharness", Kind: harness.User,
+        Path: filepath.Join(ctx.HomeDir, ".myharness", "skills"),
+    }}
+    if ctx.RepoRoot != "" {
+        scopes = append(scopes, harness.Scope{
+            Harness: "myharness", Kind: harness.Project,
+            Path: filepath.Join(ctx.RepoRoot, ".myharness", "skills"),
+        })
+    }
+    return scopes
+}
+
+func init() { harness.Register(h{}) }
+```
+
+Then add a blank-import in `cmd/skillscope/main.go`:
+
+```go
+_ "github.com/sethgho/skillscope/internal/harness/myharness"
+```
+
+## Adding a view
+
+Drop a single file at `internal/view/<id>/view.go`. Same `init()`-registration
+pattern.
+
+```go
+package myview
+
+import (
+    "fmt"
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/sethgho/skillscope/internal/app"
+)
+
+type v struct{}
+
+func (v) ID() string                  { return "myview" }
+func (v) Name() string                { return "My View" }
+func (v) KeyHint() string             { return "7" }
+func (v) Init(m *app.Model) tea.Cmd   { return nil }
+
+func (vv v) Update(m *app.Model, msg tea.Msg) (app.View, tea.Cmd) {
+    return vv, nil
+}
+
+func (vv v) Render(m *app.Model, width, height int) string {
+    skills := m.FilteredSkills()
+    out := fmt.Sprintf("My View — %d skills\n\n", len(skills))
+    for i, sk := range skills {
+        marker := "  "
+        if i == m.Cursor {
+            marker = "▶ "
+        }
+        out += fmt.Sprintf("%s%s (%s)\n", marker, sk.Name, sk.Scope.Harness)
+        if i > height-4 {
+            break
+        }
+    }
+    _ = width
+    return out
+}
+
+func init() { app.RegisterView(v{}) }
+```
+
+Blank-import it in `cmd/skillscope/main.go` and it'll appear in the tab bar.
+
+## Non-goals
+
+- Editing skills inside the TUI (use `$EDITOR` with `e`).
+- Creating skills from scratch.
+- Syncing skills to a remote.
+- Supporting non-skill rules files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`).
+
+## License
+
+MIT.
