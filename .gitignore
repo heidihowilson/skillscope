@@ -1,4 +1,5 @@
 /skillscope
+/bin/
 /dist/
 *.test
 *.out
