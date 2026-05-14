@@ -26,6 +26,52 @@ func (vv v) Update(m *app.Model, msg tea.Msg) (app.View, tea.Cmd) {
 	return vv, nil
 }
 
+// uniqueNames returns the visible names alphabetically. Diff and Matrix
+// share this navigation model: cursor is an index into the unique-name
+// list.
+func uniqueNames(m *app.Model) []string {
+	set := map[string]bool{}
+	for _, sk := range m.FilteredSkills() {
+		set[sk.Name] = true
+	}
+	out := make([]string, 0, len(set))
+	for n := range set {
+		out = append(out, n)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func (vv v) Navigate(m *app.Model, dir int) {
+	names := uniqueNames(m)
+	if len(names) == 0 {
+		m.Cursor = 0
+		return
+	}
+	m.Cursor += dir
+	if m.Cursor < 0 {
+		m.Cursor = 0
+	}
+	if m.Cursor >= len(names) {
+		m.Cursor = len(names) - 1
+	}
+}
+
+func (vv v) Selected(m *app.Model) *scan.SkillRecord {
+	names := uniqueNames(m)
+	if len(names) == 0 || m.Cursor < 0 || m.Cursor >= len(names) {
+		return nil
+	}
+	name := names[m.Cursor]
+	for i := range m.Skills {
+		if m.Skills[i].Name == name {
+			out := m.Skills[i]
+			return &out
+		}
+	}
+	return nil
+}
+
 func (vv v) Render(m *app.Model, width, height int) string {
 	sel := m.SelectedSkill()
 	if sel == nil {

@@ -114,17 +114,17 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "v":
-		m.ActiveView = (m.ActiveView + 1) % len(m.Views)
+		m.setActiveView((m.ActiveView + 1) % len(m.Views))
 		return m, nil
 
 	case "V":
-		m.ActiveView = (m.ActiveView - 1 + len(m.Views)) % len(m.Views)
+		m.setActiveView((m.ActiveView - 1 + len(m.Views)) % len(m.Views))
 		return m, nil
 
 	case "1", "2", "3", "4", "5", "6", "7", "8", "9":
-		idx := int(k[0]-'1')
+		idx := int(k[0] - '1')
 		if idx < len(m.Views) {
-			m.ActiveView = idx
+			m.setActiveView(idx)
 		}
 		return m, nil
 
@@ -142,17 +142,16 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.StatusMsg = ""
 		return m, m.Init()
 
-	// Navigation — delegate to main view or handle generically.
+	// Navigation — let the active view decide what "row" means.
 	case "up", "k":
-		if m.Cursor > 0 {
-			m.Cursor--
+		if len(m.Views) > 0 && m.ActiveView < len(m.Views) {
+			m.Views[m.ActiveView].Navigate(m, -1)
 		}
 		return m, nil
 
 	case "down", "j":
-		filtered := m.FilteredSkills()
-		if m.Cursor < len(filtered)-1 {
-			m.Cursor++
+		if len(m.Views) > 0 && m.ActiveView < len(m.Views) {
+			m.Views[m.ActiveView].Navigate(m, +1)
 		}
 		return m, nil
 
@@ -395,6 +394,16 @@ func (m *Model) rescan() {
 	s := scan.Scanner{Harnesses: m.Harnesses}
 	m.Skills = s.Scan(m.HCtx)
 	m.ClampCursor()
+}
+
+// setActiveView switches view and resets cursor — cursor coords are
+// view-relative.
+func (m *Model) setActiveView(idx int) {
+	if idx == m.ActiveView {
+		return
+	}
+	m.ActiveView = idx
+	m.Cursor = 0
 }
 
 func writableScopes(scopes []harness.Scope) []harness.Scope {

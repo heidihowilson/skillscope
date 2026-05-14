@@ -8,29 +8,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/sethgho/skillscope/internal/app"
+	"github.com/sethgho/skillscope/internal/scan"
 	"github.com/sethgho/skillscope/internal/ui"
 )
 
-type v struct {
-	// flat index -> (harness, scope, skill) for cursor tracking
-	flatItems []flatItem
-}
-
-type flatItemKind int
-
-const (
-	itemHarness flatItemKind = iota
-	itemScope
-	itemSkill
-)
-
-type flatItem struct {
-	kind    flatItemKind
-	label   string
-	hid     string
-	indent  int
-	skillIdx int // index into FilteredSkills()
-}
+type v struct{}
 
 func (v) ID() string      { return "tree" }
 func (v) Name() string    { return "Tree" }
@@ -42,110 +24,151 @@ func (vv v) Update(m *app.Model, msg tea.Msg) (app.View, tea.Cmd) {
 	return vv, nil
 }
 
-func (vv v) Render(m *app.Model, width, height int) string {
+// flatLeaves returns the visible skill records in tree-display order:
+// harness alphabetical, then scope path alphabetical, then skill name
+// alphabetical. This is the order j/k steps through.
+func flatLeaves(m *app.Model) []scan.SkillRecord {
 	skills := m.FilteredSkills()
-	if len(skills) == 0 {
+	sort.Slice(skills, func(i, j int) bool {
+		if skills[i].Scope.Harness != skills[j].Scope.Harness {
+			return skills[i].Scope.Harness < skills[j].Scope.Harness
+		}
+		if skills[i].Scope.Path != skills[j].Scope.Path {
+			return skills[i].Scope.Path < skills[j].Scope.Path
+		}
+		return skills[i].Name < skills[j].Name
+	})
+	return skills
+}
+
+func (vv v) Navigate(m *app.Model, dir int) {
+	leaves := flatLeaves(m)
+	if len(leaves) == 0 {
+		m.Cursor = 0
+		return
+	}
+	m.Cursor += dir
+	if m.Cursor < 0 {
+		m.Cursor = 0
+	}
+	if m.Cursor >= len(leaves) {
+		m.Cursor = len(leaves) - 1
+	}
+}
+
+func (vv v) Selected(m *app.Model) *scan.SkillRecord {
+	leaves := flatLeaves(m)
+	if len(leaves) == 0 || m.Cursor < 0 || m.Cursor >= len(leaves) {
+		return nil
+	}
+	sk := leaves[m.Cursor]
+	return &sk
+}
+
+func (vv v) Render(m *app.Model, width, height int) string {
+	leaves := flatLeaves(m)
+	if len(leaves) == 0 {
 		return ui.DimStyle.Width(width).Height(height).Render("  no skills found")
 	}
 
-	// Group: harness -> scope path -> []skill
-	type scopeKey struct {
-		harness string
-		path    string
-		kind    string
+	// Clamp cursor to visible leaves.
+	if m.Cursor >= len(leaves) {
+		m.Cursor = len(leaves) - 1
 	}
-	type node struct {
-		sk   scopeKey
-		idxs []int
+	if m.Cursor < 0 {
+		m.Cursor = 0
 	}
 
-	harnessOrder := []string{}
-	hSet := map[string]bool{}
-	scopeMap := map[string]map[string][]int{} // harness -> scopePath -> []index
-
-	for i, sk := range skills {
-		if !hSet[sk.Scope.Harness] {
-			hSet[sk.Scope.Harness] = true
-			harnessOrder = append(harnessOrder, sk.Scope.Harness)
-		}
-		if scopeMap[sk.Scope.Harness] == nil {
-			scopeMap[sk.Scope.Harness] = map[string][]int{}
-		}
-		scopeMap[sk.Scope.Harness][sk.Scope.Path] = append(
-			scopeMap[sk.Scope.Harness][sk.Scope.Path], i)
+	// Build rows in the same order as `leaves`.
+	type row struct {
+		text        string
+		leafIdx     int // -1 if header/scope, else index in `leaves`
+		fullWidthOK bool
 	}
-	sort.Strings(harnessOrder)
+	var rows []row
 
-	var rows []string
-	skillFlatIdx := 0 // tracks which flat skill row the cursor matches
-
-	for _, hid := range harnessOrder {
-		hLabel := lipgloss.NewStyle().Foreground(ui.HarnessColor(hid)).Bold(true).Render("▼ " + hid)
-		rows = append(rows, hLabel)
-
-		scopePaths := make([]string, 0)
-		for p := range scopeMap[hid] {
-			scopePaths = append(scopePaths, p)
+	var curHarness, curScopePath string
+	for i, sk := range leaves {
+		if sk.Scope.Harness != curHarness {
+			curHarness = sk.Scope.Harness
+			curScopePath = ""
+			label := lipgloss.NewStyle().
+				Foreground(ui.HarnessColor(sk.Scope.Harness)).
+				Bold(true).
+				Render("▼ " + sk.Scope.Harness)
+			rows = append(rows, row{text: label, leafIdx: -1})
 		}
-		sort.Strings(scopePaths)
-
-		for _, sp := range scopePaths {
-			idxs := scopeMap[hid][sp]
-			shortPath := sp
-			if len(shortPath) > width-8 {
-				shortPath = "…" + shortPath[len(shortPath)-(width-9):]
+		if sk.Scope.Path != curScopePath {
+			curScopePath = sk.Scope.Path
+			short := sk.Scope.Path
+			if width > 0 && len(short) > width-6 && width > 6 {
+				short = "…" + short[len(short)-(width-7):]
 			}
-			rows = append(rows, ui.DimStyle.Render("  ├─ "+shortPath))
+			rows = append(rows, row{
+				text:    ui.DimStyle.Render("  ├─ " + short),
+				leafIdx: -1,
+			})
+		}
 
-			sort.Ints(idxs)
-			for i, idx := range idxs {
-				sk := skills[idx]
-				connector := "│  ├─ "
-				if i == len(idxs)-1 {
-					connector = "│  └─ "
-				}
-				name := sk.Name
-				if sk.ParseErr != nil {
-					name += ui.ErrorStyle.Render(" !")
-				}
-				line := "  " + connector + name
-				if idx == m.Cursor {
-					line = ui.SelectedStyle.Render(fmt.Sprintf("%-*s", width, line))
-				}
-				rows = append(rows, line)
-				skillFlatIdx++
+		name := sk.Name
+		if sk.ParseErr != nil {
+			name += ui.ErrorStyle.Render(" !")
+		}
+		connector := "│  ├─ "
+		// Look ahead to decide whether this is the last skill in this scope.
+		isLast := true
+		if i+1 < len(leaves) {
+			next := leaves[i+1]
+			if next.Scope.Harness == sk.Scope.Harness && next.Scope.Path == sk.Scope.Path {
+				isLast = false
 			}
 		}
+		if isLast {
+			connector = "│  └─ "
+		}
+		rows = append(rows, row{
+			text:        "  " + connector + name,
+			leafIdx:     i,
+			fullWidthOK: true,
+		})
 	}
 
-	// Scroll to keep cursor visible.
+	// Find the row index containing the cursor's leaf so we can scroll.
+	selRowIdx := -1
+	for i, r := range rows {
+		if r.leafIdx == m.Cursor {
+			selRowIdx = i
+			break
+		}
+	}
+
 	maxRows := height - 1
 	if maxRows < 1 {
 		maxRows = 1
 	}
-	if len(rows) > maxRows {
-		// Find the selected row.
-		selRow := -1
-		skillCount := 0
-		for i, r := range rows {
-			if strings.Contains(r, ui.SelectedStyle.Render("")) {
-				selRow = i
-				break
-			}
-			_ = skillCount
-		}
-		start := 0
-		if selRow >= 0 && selRow >= maxRows {
-			start = selRow - maxRows + 1
-		}
-		end := start + maxRows
-		if end > len(rows) {
-			end = len(rows)
-		}
-		rows = rows[start:end]
+	start := 0
+	if selRowIdx >= maxRows {
+		start = selRowIdx - maxRows + 1
+	}
+	end := start + maxRows
+	if end > len(rows) {
+		end = len(rows)
 	}
 
-	return strings.Join(rows, "\n")
+	var out []string
+	for i := start; i < end; i++ {
+		r := rows[i]
+		text := r.text
+		if r.leafIdx == m.Cursor {
+			text = ui.SelectedStyle.Render(fmt.Sprintf("%-*s", width, stripTrailingNewlines(text)))
+		}
+		out = append(out, text)
+	}
+	return strings.Join(out, "\n")
+}
+
+func stripTrailingNewlines(s string) string {
+	return strings.TrimRight(s, "\n")
 }
 
 func init() { app.RegisterView(v{}) }

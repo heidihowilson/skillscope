@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/sethgho/skillscope/internal/app"
 	"github.com/sethgho/skillscope/internal/harness"
+	"github.com/sethgho/skillscope/internal/scan"
 	"github.com/sethgho/skillscope/internal/ui"
 )
 
@@ -22,6 +23,76 @@ func (v) Init(m *app.Model) tea.Cmd { return nil }
 
 func (vv v) Update(m *app.Model, msg tea.Msg) (app.View, tea.Cmd) {
 	return vv, nil
+}
+
+// uniqueNames returns the alphabetically sorted unique skill names after
+// applying the current filters. This is the matrix view's row order.
+func uniqueNames(m *app.Model) []string {
+	set := map[string]bool{}
+	for _, sk := range m.FilteredSkills() {
+		set[sk.Name] = true
+	}
+	out := make([]string, 0, len(set))
+	for n := range set {
+		out = append(out, n)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// Navigate moves the cursor through unique skill names.
+func (vv v) Navigate(m *app.Model, dir int) {
+	names := uniqueNames(m)
+	if len(names) == 0 {
+		m.Cursor = 0
+		return
+	}
+	m.Cursor += dir
+	if m.Cursor < 0 {
+		m.Cursor = 0
+	}
+	if m.Cursor >= len(names) {
+		m.Cursor = len(names) - 1
+	}
+}
+
+// Selected returns the highest-precedence record for the cursored name.
+func (vv v) Selected(m *app.Model) *scan.SkillRecord {
+	names := uniqueNames(m)
+	if len(names) == 0 || m.Cursor < 0 || m.Cursor >= len(names) {
+		return nil
+	}
+	name := names[m.Cursor]
+
+	prec := func(k harness.ScopeKind) int {
+		switch k {
+		case harness.User:
+			return 4
+		case harness.Project:
+			return 3
+		case harness.ProjectLocal:
+			return 2
+		case harness.Plugin:
+			return 1
+		}
+		return 0
+	}
+
+	var best *scan.SkillRecord
+	for i := range m.Skills {
+		sk := &m.Skills[i]
+		if sk.Name != name {
+			continue
+		}
+		if best == nil || prec(sk.Scope.Kind) > prec(best.Scope.Kind) {
+			best = sk
+		}
+	}
+	if best == nil {
+		return nil
+	}
+	out := *best
+	return &out
 }
 
 // Hints implements ActionHinter.
@@ -117,16 +188,8 @@ func (vv v) Render(m *app.Model, width, height int) string {
 		}
 	}
 
-	// Names visible after filtering, deduped, sorted.
-	nameSet := map[string]bool{}
-	for _, sk := range skills {
-		nameSet[sk.Name] = true
-	}
-	names := make([]string, 0, len(nameSet))
-	for n := range nameSet {
-		names = append(names, n)
-	}
-	sort.Strings(names)
+	// Names visible after filtering, deduped, sorted — same order as Navigate uses.
+	names := uniqueNames(m)
 
 	// Column widths.
 	maxName := 8
@@ -161,10 +224,16 @@ func (vv v) Render(m *app.Model, width, height int) string {
 	}
 	rule := ui.DimStyle.Render(strings.Repeat("─", width))
 
-	// Compute selected row name so we can highlight it.
+	// Clamp cursor to the visible name list.
+	if m.Cursor >= len(names) {
+		m.Cursor = len(names) - 1
+	}
+	if m.Cursor < 0 {
+		m.Cursor = 0
+	}
 	selName := ""
-	if sk := m.SelectedSkill(); sk != nil {
-		selName = sk.Name
+	if m.Cursor < len(names) {
+		selName = names[m.Cursor]
 	}
 
 	// Body rows.
@@ -173,16 +242,8 @@ func (vv v) Render(m *app.Model, width, height int) string {
 		maxBody = 1
 	}
 	visStart := 0
-	// Find selected name's index in the visible list to keep it on-screen.
-	selIdx := -1
-	for i, n := range names {
-		if n == selName {
-			selIdx = i
-			break
-		}
-	}
-	if selIdx >= 0 && selIdx >= maxBody {
-		visStart = selIdx - maxBody + 1
+	if m.Cursor >= maxBody {
+		visStart = m.Cursor - maxBody + 1
 	}
 
 	var body []string

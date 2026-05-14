@@ -1,6 +1,9 @@
 package app
 
 import (
+	"sort"
+	"strconv"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/sethgho/skillscope/internal/harness"
@@ -8,7 +11,10 @@ import (
 	"github.com/sethgho/skillscope/internal/ui"
 )
 
-// View is the plugin interface for a visualization mode.
+// View is the plugin interface for a visualization mode. Each view owns
+// its cursor semantics — Navigate moves through whatever the view
+// considers "rows," and Selected returns the record that maps to the
+// current cursor position.
 type View interface {
 	ID() string
 	Name() string
@@ -16,6 +22,16 @@ type View interface {
 	Init(m *Model) tea.Cmd
 	Update(m *Model, msg tea.Msg) (View, tea.Cmd)
 	Render(m *Model, width, height int) string
+
+	// Navigate moves the model's cursor by dir (+1 down, -1 up). The view
+	// is responsible for clamping and for translating the cursor index
+	// into a meaningful row in its own display order.
+	Navigate(m *Model, dir int)
+
+	// Selected returns the SkillRecord that should be acted on (preview,
+	// copy, move, delete) for the current cursor position. Returning nil
+	// means "no selection."
+	Selected(m *Model) *scan.SkillRecord
 }
 
 // ActionHinter is an optional interface views can implement to populate
@@ -32,8 +48,15 @@ func RegisterView(v View) {
 	viewRegistry = append(viewRegistry, v)
 }
 
-// AllViews returns registered views in registration order.
+// AllViews returns registered views sorted by their KeyHint (so "1" comes
+// before "2" regardless of init() order — goimports likes to alphabetize
+// blank imports, which used to scramble the tab bar).
 func AllViews() []View {
+	sort.SliceStable(viewRegistry, func(i, j int) bool {
+		a, _ := strconv.Atoi(viewRegistry[i].KeyHint())
+		b, _ := strconv.Atoi(viewRegistry[j].KeyHint())
+		return a < b
+	})
 	return viewRegistry
 }
 
@@ -138,14 +161,14 @@ func (m *Model) FilteredSkills() []scan.SkillRecord {
 	return out
 }
 
-// SelectedSkill returns the currently highlighted skill, or nil.
+// SelectedSkill returns the currently highlighted skill, or nil. It
+// delegates to the active view so each view can interpret the cursor in
+// its own coordinate system.
 func (m *Model) SelectedSkill() *scan.SkillRecord {
-	filtered := m.FilteredSkills()
-	if m.Cursor < 0 || m.Cursor >= len(filtered) {
+	if len(m.Views) == 0 || m.ActiveView < 0 || m.ActiveView >= len(m.Views) {
 		return nil
 	}
-	sk := filtered[m.Cursor]
-	return &sk
+	return m.Views[m.ActiveView].Selected(m)
 }
 
 // IsShadowed returns true if another record with the same name exists at
@@ -190,19 +213,13 @@ func (m *Model) AllScopes() []harness.Scope {
 	return scopes
 }
 
-// ClampCursor ensures the cursor stays in bounds.
+// ClampCursor asks the active view to re-clamp (via a no-op Navigate).
 func (m *Model) ClampCursor() {
-	n := len(m.FilteredSkills())
-	if n == 0 {
+	if len(m.Views) == 0 || m.ActiveView < 0 || m.ActiveView >= len(m.Views) {
 		m.Cursor = 0
 		return
 	}
-	if m.Cursor >= n {
-		m.Cursor = n - 1
-	}
-	if m.Cursor < 0 {
-		m.Cursor = 0
-	}
+	m.Views[m.ActiveView].Navigate(m, 0)
 }
 
 // fuzzyMatch is a simple substring / character-sequence matcher.
