@@ -273,6 +273,13 @@ func (vv v) Render(m *app.Model, width, height int) string {
 
 	out := []string{legend, "", hdr, rule}
 	out = append(out, body...)
+
+	// Pad so `hint` is bottom-anchored within the height we were given.
+	// Reserve one row above the hint for breathing room.
+	used := len(out) + 2 // body + blank + hint
+	if used < height {
+		out = append(out, strings.Repeat("\n", height-used-1))
+	}
 	out = append(out, "", hint)
 	return strings.Join(out, "\n")
 }
