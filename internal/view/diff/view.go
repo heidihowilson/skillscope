@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/sethgho/skillscope/internal/app"
 	"github.com/sethgho/skillscope/internal/harness"
 	"github.com/sethgho/skillscope/internal/scan"
@@ -240,6 +241,14 @@ func renderDetail(name string, recs []scan.SkillRecord, width, height int) strin
 
 	hColor := ui.HarnessColor(harnessID)
 
+	// Reserve 2 cols on each side for the gutter marker (" X "), plus 3
+	// cells in the middle for the divider " │ ".
+	gutter := 2
+	colW := halfW - gutter
+	if colW < 8 {
+		colW = 8
+	}
+
 	leftHeader := lipgloss.NewStyle().Foreground(hColor).Bold(true).
 		Width(halfW).
 		Render(fmt.Sprintf("%s · wins", left.Scope.Kind))
@@ -247,38 +256,27 @@ func renderDetail(name string, recs []scan.SkillRecord, width, height int) strin
 		Width(halfW).
 		Render(fmt.Sprintf("%s · shadowed", right.Scope.Kind))
 
-	leftBody := formatRecord(left, halfW)
-	rightBody := formatRecord(right, halfW)
+	leftLines := strings.Split(recordToText(left), "\n")
+	rightLines := strings.Split(recordToText(right), "\n")
 
-	leftLines := strings.Split(leftBody, "\n")
-	rightLines := strings.Split(rightBody, "\n")
-	maxL := len(leftLines)
-	if len(rightLines) > maxL {
-		maxL = len(rightLines)
-	}
-	for len(leftLines) < maxL {
-		leftLines = append(leftLines, "")
-	}
-	for len(rightLines) < maxL {
-		rightLines = append(rightLines, "")
-	}
+	pairs := AlignLines(leftLines, rightLines)
 
 	var rows []string
 	rows = append(rows, title)
 	rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top,
 		leftHeader, ui.DimStyle.Render(" │ "), rightHeader))
 	rows = append(rows, strings.Repeat("─", halfW)+"─┼─"+strings.Repeat("─", halfW))
-	for i := range leftLines {
-		if len(rows)-3 >= height-3 {
+
+	maxRows := height - 3
+	for _, p := range pairs {
+		if len(rows)-3 >= maxRows {
+			rows = append(rows, ui.DimStyle.Render(fmt.Sprintf("  … %d more rows", countRemaining(pairs, len(rows)-3))))
 			break
 		}
-		l := leftLines[i]
-		r := rightLines[i]
-		if l != r {
-			l = lipgloss.NewStyle().Foreground(ui.ColorPresent).Render(l)
-			r = lipgloss.NewStyle().Foreground(ui.ColorShadow).Render(r)
+		rows = append(rows, renderPair(p, colW)...)
+		if len(rows)-3 >= maxRows {
+			break
 		}
-		rows = append(rows, fmt.Sprintf("%-*s │ %s", halfW, l, r))
 	}
 	for len(rows) < height {
 		rows = append(rows, "")
@@ -286,24 +284,129 @@ func renderDetail(name string, recs []scan.SkillRecord, width, height int) strin
 	return strings.Join(rows, "\n")
 }
 
-func formatRecord(sk scan.SkillRecord, width int) string {
+// renderPair wraps both sides of a pair to colW, then emits one or more
+// aligned rows. Each row includes a gutter marker that indicates the op.
+func renderPair(p DiffPair, colW int) []string {
+	leftLines := wrapLines(p.Left, colW)
+	rightLines := wrapLines(p.Right, colW)
+
+	var leftMarker, rightMarker string
+	var leftStyle, rightStyle lipgloss.Style
+
+	base := lipgloss.NewStyle()
+	addStyle := lipgloss.NewStyle().Foreground(ui.ColorPresent)
+	delStyle := lipgloss.NewStyle().Foreground(ui.ColorError)
+	chgStyle := lipgloss.NewStyle().Foreground(ui.ColorShadow)
+
+	switch p.Op {
+	case OpEqual:
+		leftMarker, rightMarker = " ", " "
+		leftStyle, rightStyle = base, base
+	case OpChanged:
+		leftMarker, rightMarker = "~", "~"
+		leftStyle, rightStyle = chgStyle, chgStyle
+	case OpDelete:
+		leftMarker, rightMarker = "-", " "
+		leftStyle = delStyle
+		rightStyle = base
+	case OpInsert:
+		leftMarker, rightMarker = " ", "+"
+		leftStyle = base
+		rightStyle = addStyle
+	}
+
+	n := len(leftLines)
+	if len(rightLines) > n {
+		n = len(rightLines)
+	}
+	if n == 0 {
+		n = 1
+	}
+
+	gutterStyleL := lipgloss.NewStyle().Foreground(ui.ColorFgDim)
+	gutterStyleR := lipgloss.NewStyle().Foreground(ui.ColorFgDim)
+	if p.Op == OpDelete {
+		gutterStyleL = delStyle.Bold(true)
+	}
+	if p.Op == OpInsert {
+		gutterStyleR = addStyle.Bold(true)
+	}
+	if p.Op == OpChanged {
+		gutterStyleL = chgStyle.Bold(true)
+		gutterStyleR = chgStyle.Bold(true)
+	}
+
+	var rows []string
+	for i := 0; i < n; i++ {
+		ll, rr := "", ""
+		if i < len(leftLines) {
+			ll = leftLines[i]
+		}
+		if i < len(rightLines) {
+			rr = rightLines[i]
+		}
+
+		// Only show gutter marker on the first wrap line, subsequent
+		// wrap lines get a continuation space.
+		lm, rm := " ", " "
+		if i == 0 {
+			lm, rm = leftMarker, rightMarker
+		}
+
+		// Pad cells manually — lipgloss's Width() returns empty for
+		// empty input, which collapses columns on continuation rows.
+		leftCell := gutterStyleL.Render(lm+" ") + padCell(ll, leftStyle, colW)
+		rightCell := gutterStyleR.Render(rm+" ") + padCell(rr, rightStyle, colW)
+
+		rows = append(rows, leftCell+ui.DimStyle.Render(" │ ")+rightCell)
+	}
+	return rows
+}
+
+// padCell styles `content` and pads it (with raw spaces) so its visible
+// width is exactly `width` cells.
+func padCell(content string, style lipgloss.Style, width int) string {
+	styled := style.Render(content)
+	pad := width - lipgloss.Width(styled)
+	if pad < 0 {
+		pad = 0
+	}
+	return styled + strings.Repeat(" ", pad)
+}
+
+// wrapLines word-wraps s to width, returning the wrap-lines. Empty input
+// returns a single empty string so callers can still emit one row.
+func wrapLines(s string, width int) []string {
+	if s == "" {
+		return []string{""}
+	}
+	wrapped := wordwrap.String(s, width)
+	return strings.Split(wrapped, "\n")
+}
+
+// countRemaining roughly estimates how many wrap-rows haven't fit yet.
+func countRemaining(pairs []DiffPair, rendered int) int {
+	if rendered >= len(pairs) {
+		return 0
+	}
+	return len(pairs) - rendered
+}
+
+// recordToText returns the YAML frontmatter + body for a record as a
+// single string. No truncation — the diff renderer wraps per column.
+func recordToText(sk scan.SkillRecord) string {
 	var sb strings.Builder
 	if sk.Frontmatter != nil {
 		out, _ := yaml.Marshal(sk.Frontmatter)
-		sb.WriteString(string(out))
+		sb.WriteString(strings.TrimRight(string(out), "\n"))
 	}
 	if sk.Body != "" {
 		sb.WriteString("\n")
-		sb.WriteString(sk.Body)
+		sb.WriteString("---")
+		sb.WriteString("\n")
+		sb.WriteString(strings.TrimRight(sk.Body, "\n"))
 	}
-	var lines []string
-	for _, l := range strings.Split(sb.String(), "\n") {
-		if len(l) > width {
-			l = l[:width-1] + "…"
-		}
-		lines = append(lines, l)
-	}
-	return strings.Join(lines, "\n")
+	return sb.String()
 }
 
 // Hints implements ActionHinter.
