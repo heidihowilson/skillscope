@@ -11,7 +11,7 @@ type h struct{}
 
 func (h) ID() string            { return "opencode" }
 func (h) Name() string          { return "OpenCode" }
-func (h) Color() lipgloss.Color { return lipgloss.Color("#A855F7") }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#FFCC00") } // OpenCode's brand is grayscale-only; gold stands in for TUI use
 
 func (h) Scopes(ctx harness.Context) []harness.Scope {
 	scopes := []harness.Scope{

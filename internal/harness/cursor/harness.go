@@ -11,7 +11,7 @@ type h struct{}
 
 func (h) ID() string            { return "cursor" }
 func (h) Name() string          { return "Cursor" }
-func (h) Color() lipgloss.Color { return lipgloss.Color("#1C94F4") }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#F54E00") } // Cursor International Orange
 
 func (h) Scopes(ctx harness.Context) []harness.Scope {
 	scopes := []harness.Scope{

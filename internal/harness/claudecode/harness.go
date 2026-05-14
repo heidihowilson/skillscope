@@ -12,7 +12,7 @@ type h struct{}
 
 func (h) ID() string            { return "claude-code" }
 func (h) Name() string          { return "Claude Code" }
-func (h) Color() lipgloss.Color { return lipgloss.Color("#CC785C") }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#D97757") } // Anthropic accent orange
 
 func (h) Scopes(ctx harness.Context) []harness.Scope {
 	var scopes []harness.Scope

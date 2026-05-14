@@ -1,6 +1,9 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/sethgho/skillscope/internal/harness"
+)
 
 var (
 	ColorFg      = lipgloss.Color("#E2E8F0")
@@ -56,19 +59,14 @@ var (
 			Align(lipgloss.Center)
 )
 
-// HarnessColor returns the harness-specific color string for use in lipgloss.
+// HarnessColor returns the brand color the harness registered itself with.
+// Each harness package is the single source of truth for its own color;
+// this helper just looks it up by ID.
 func HarnessColor(hid string) lipgloss.Color {
-	switch hid {
-	case "claude-code":
-		return lipgloss.Color("#CC785C")
-	case "codex":
-		return lipgloss.Color("#10A37F")
-	case "cursor":
-		return lipgloss.Color("#1C94F4")
-	case "opencode":
-		return lipgloss.Color("#A855F7")
-	case "antigravity":
-		return lipgloss.Color("#F59E0B")
+	for _, h := range harness.All() {
+		if h.ID() == hid {
+			return h.Color()
+		}
 	}
-	return lipgloss.Color("#718096")
+	return lipgloss.Color("#718096") // fallback gray
 }

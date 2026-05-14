@@ -11,7 +11,7 @@ type h struct{}
 
 func (h) ID() string            { return "antigravity" }
 func (h) Name() string          { return "Antigravity" }
-func (h) Color() lipgloss.Color { return lipgloss.Color("#F59E0B") }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#4285F4") } // Google Blue
 
 func (h) Scopes(ctx harness.Context) []harness.Scope {
 	scopes := []harness.Scope{

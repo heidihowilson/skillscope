@@ -11,7 +11,7 @@ type h struct{}
 
 func (h) ID() string            { return "codex" }
 func (h) Name() string          { return "Codex CLI" }
-func (h) Color() lipgloss.Color { return lipgloss.Color("#10A37F") }
+func (h) Color() lipgloss.Color { return lipgloss.Color("#10A37F") } // OpenAI/ChatGPT green
 
 func (h) Scopes(ctx harness.Context) []harness.Scope {
 	scopes := []harness.Scope{
