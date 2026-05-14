@@ -6,7 +6,7 @@ harness on your machine. See your skills at a glance — broken down by scope
 OpenCode, Antigravity) — and move them between scopes in 1–2 keystrokes.
 
 ```
-┌ Matrix ┐ Tree   Venn   Diff   Heatmap   Gallery
+┌ Matrix ┐ Tree   Diff
 skill                claude/user  claude/proj  codex/user  cursor/user  …
 test-skill           ●            ·            ·           ·
 multi-scope-skill    ●            ◐            ·           ·
@@ -91,14 +91,13 @@ Picker shortcut: e.g. `c 3` = "copy to scope 3."
 
 ## Views
 
-1. **Matrix** — rows = skills, columns = (harness × scope) with a grouped
-   header. `●` present, `◐` shadowed, `·` absent, `!` parse error.
+1. **Matrix** — rows = skills, columns = scope (user / project / local /
+   plugin). Each cell shows one colored dot per harness present. `●`
+   winning, `◐` shadowed by a higher-precedence scope in the same harness,
+   `!` parse error, `·` absent.
 2. **Tree** — collapsible Harness → Scope → Skill.
-3. **Venn** — for one harness, breaks every skill into its user / project /
-   local intersection regions with counts and per-region lists.
-4. **Diff** — side-by-side frontmatter + body for skills in multiple scopes
+3. **Diff** — side-by-side frontmatter + body for skills in multiple scopes
    within one harness.
-5. **Gallery** — lists every registered view (proves the plugin surface works).
 
 ## Adding a harness
 

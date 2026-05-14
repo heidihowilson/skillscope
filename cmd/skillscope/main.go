@@ -22,9 +22,7 @@ import (
 	// Register views (order = key index).
 	_ "github.com/sethgho/skillscope/internal/view/matrix"
 	_ "github.com/sethgho/skillscope/internal/view/tree"
-	_ "github.com/sethgho/skillscope/internal/view/venn"
 	_ "github.com/sethgho/skillscope/internal/view/diff"
-	_ "github.com/sethgho/skillscope/internal/view/gallery"
 )
 
 var version = "dev"

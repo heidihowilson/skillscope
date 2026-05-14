@@ -17,7 +17,7 @@ type v struct{}
 
 func (v) ID() string      { return "diff" }
 func (v) Name() string    { return "Diff" }
-func (v) KeyHint() string { return "4" }
+func (v) KeyHint() string { return "3" }
 
 
 func (v) Init(m *app.Model) tea.Cmd { return nil }

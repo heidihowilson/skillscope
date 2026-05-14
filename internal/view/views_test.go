@@ -16,10 +16,8 @@ import (
 	_ "github.com/sethgho/skillscope/internal/harness/opencode"
 
 	_ "github.com/sethgho/skillscope/internal/view/diff"
-	_ "github.com/sethgho/skillscope/internal/view/gallery"
 	_ "github.com/sethgho/skillscope/internal/view/matrix"
 	_ "github.com/sethgho/skillscope/internal/view/tree"
-	_ "github.com/sethgho/skillscope/internal/view/venn"
 )
 
 func newTestModel(width, height int) *app.Model {
@@ -77,35 +75,6 @@ func TestMatrixContainsSkillNames(t *testing.T) {
 			if !strings.Contains(out, name) {
 				t.Errorf("matrix output missing skill %q", name)
 			}
-		}
-	}
-}
-
-func TestGalleryListsAllViews(t *testing.T) {
-	m := newTestModel(100, 30)
-	for _, v := range app.AllViews() {
-		if v.ID() != "gallery" {
-			continue
-		}
-		out := v.Render(m, 100, 30)
-		for _, id := range []string{"matrix", "tree", "venn", "diff", "gallery"} {
-			if !strings.Contains(out, id) {
-				t.Errorf("gallery missing view id %q", id)
-			}
-		}
-	}
-}
-
-func TestVennShowsCounts(t *testing.T) {
-	m := newTestModel(100, 30)
-	m.HarnessFilter = map[string]bool{"claude-code": true}
-	for _, v := range app.AllViews() {
-		if v.ID() != "venn" {
-			continue
-		}
-		out := v.Render(m, 100, 30)
-		if !strings.Contains(out, "claude-code") {
-			t.Errorf("venn missing harness id: %q", out)
 		}
 	}
 }
