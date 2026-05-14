@@ -59,12 +59,30 @@ func (m *Model) View() string {
 		content = m.renderMainView(m.Width, contentH)
 	}
 
+	// Pad content to exactly contentH rows so the toolbar/status bar
+	// anchor to the bottom of the terminal instead of floating wherever
+	// the view's natural output ends.
+	content = padToHeight(content, contentH, m.Width)
+
 	if m.SearchActive {
 		searchBar := m.renderSearchBar()
 		return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, toolbar, searchBar)
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, toolbar, statusBar)
+}
+
+// padToHeight appends blank lines to `s` until it has exactly `height`
+// rows. Each blank line is `width` spaces so it doesn't collapse when
+// joined vertically with other blocks.
+func padToHeight(s string, height, width int) string {
+	have := lipgloss.Height(s)
+	if have >= height {
+		return s
+	}
+	blank := strings.Repeat(" ", width)
+	pad := strings.Repeat("\n"+blank, height-have)
+	return s + pad
 }
 
 // renderToolbar builds the contextual action hint row. Views can implement
