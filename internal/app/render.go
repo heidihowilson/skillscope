@@ -102,7 +102,8 @@ func (m *Model) renderToolbar() string {
 		return ui.RenderToolbar(hints, m.Width)
 	case OpDeleteConfirm:
 		hints = []ui.ActionHint{
-			{Key: "y", Label: "confirm delete"},
+			{Key: "type name", Label: "to confirm"},
+			{Key: "Enter", Label: "delete"},
 			{Key: "Esc", Label: "cancel"},
 		}
 		return ui.RenderToolbar(hints, m.Width)
@@ -247,11 +248,18 @@ func (m *Model) renderOpOverlay() string {
 	case OpDeleteConfirm:
 		if m.OpSkill != nil {
 			lines = append(lines,
-				ui.ErrorStyle.Render(fmt.Sprintf("Delete %q?", m.OpSkill.Name)),
+				ui.ErrorStyle.Bold(true).Render(fmt.Sprintf("DELETE %s", m.OpSkill.Name)),
 				ui.DimStyle.Render(m.OpSkill.Path),
 				"",
-				"  press y to confirm, any other key to cancel",
+				ui.ErrorStyle.Render("This cannot be undone."),
+				"",
+				fmt.Sprintf("Type %s to confirm:", ui.BoldStyle.Render(m.OpSkill.Name)),
+				m.DeleteInput.View(),
 			)
+			if m.DeleteMismatch {
+				lines = append(lines, "", ui.ErrorStyle.Render("✗ name didn't match — type it exactly"))
+			}
+			lines = append(lines, "", ui.DimStyle.Render("  Enter to delete, Esc to cancel"))
 		}
 	case OpCopyPicker, OpMovePicker:
 		action := "Copy"

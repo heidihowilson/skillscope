@@ -120,8 +120,10 @@ type Model struct {
 	Width, Height int
 
 	// Overlays
-	ShowHelp    bool
-	SearchInput textinput.Model
+	ShowHelp        bool
+	SearchInput     textinput.Model
+	DeleteInput     textinput.Model // type the skill name to confirm delete
+	DeleteMismatch  bool            // last attempt didn't match
 
 	// Status message (transient)
 	StatusMsg string
@@ -133,10 +135,15 @@ func NewModel(ctx harness.Context) *Model {
 	ti.Placeholder = "fuzzy search…"
 	ti.CharLimit = 120
 
+	di := textinput.New()
+	di.Placeholder = "type skill name…"
+	di.CharLimit = 200
+
 	return &Model{
 		HCtx:        ctx,
 		ScopeFilter: harness.User, // not used unless ScopeFilterOn
 		SearchInput: ti,
+		DeleteInput: di,
 	}
 }
 

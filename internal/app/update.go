@@ -200,18 +200,40 @@ func (m *Model) handleOpKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	k := msg.String()
 	switch m.OpMode {
 	case OpDeleteConfirm:
-		if k == "y" {
-			if m.OpSkill != nil {
-				if err := ops.Delete(*m.OpSkill); err != nil {
-					m.StatusMsg = "delete failed: " + err.Error()
-				} else {
-					m.StatusMsg = fmt.Sprintf("deleted %s", m.OpSkill.Name)
-					m.rescan()
-				}
+		switch k {
+		case "esc", "ctrl+c":
+			m.OpMode = OpNone
+			m.OpSkill = nil
+			m.DeleteInput.Blur()
+			m.DeleteMismatch = false
+			return m, nil
+		case "enter":
+			if m.OpSkill == nil {
+				m.OpMode = OpNone
+				return m, nil
 			}
+			typed := m.DeleteInput.Value()
+			if typed != m.OpSkill.Name {
+				m.DeleteMismatch = true
+				return m, nil
+			}
+			if err := ops.Delete(*m.OpSkill); err != nil {
+				m.StatusMsg = "delete failed: " + err.Error()
+			} else {
+				m.StatusMsg = fmt.Sprintf("deleted %s", m.OpSkill.Name)
+				m.rescan()
+			}
+			m.OpMode = OpNone
+			m.OpSkill = nil
+			m.DeleteInput.Blur()
+			m.DeleteMismatch = false
+			return m, nil
 		}
-		m.OpMode = OpNone
-		m.OpSkill = nil
+		// Forward all other keys to the textinput.
+		var cmd tea.Cmd
+		m.DeleteInput, cmd = m.DeleteInput.Update(msg)
+		m.DeleteMismatch = false
+		return m, cmd
 
 	case OpCopyPicker, OpMovePicker:
 		switch k {
@@ -326,7 +348,11 @@ func (m *Model) beginDelete() (tea.Model, tea.Cmd) {
 	}
 	m.OpSkill = sk
 	m.OpMode = OpDeleteConfirm
-	return m, nil
+	m.DeleteInput.SetValue("")
+	m.DeleteInput.Placeholder = "type " + sk.Name
+	m.DeleteInput.Focus()
+	m.DeleteMismatch = false
+	return m, textinput.Blink
 }
 
 func (m *Model) cycleHarnessFilter() (tea.Model, tea.Cmd) {
