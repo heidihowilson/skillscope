@@ -269,7 +269,7 @@ func (m *Model) handleOpKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		default:
 			// Number shortcut: 1-9 selects scope.
 			if len(k) == 1 && k[0] >= '1' && k[0] <= '9' {
-				idx := int(k[0]-'1')
+				idx := int(k[0] - '1')
 				if idx < len(m.OpScopes) && m.OpSkill != nil {
 					dest := m.OpScopes[idx]
 					var err error

@@ -64,7 +64,7 @@ func AllViews() []View {
 type OpMode int
 
 const (
-	OpNone        OpMode = iota
+	OpNone OpMode = iota
 	OpCopyPicker
 	OpMovePicker
 	OpDeleteConfirm
@@ -74,7 +74,7 @@ const (
 type FocusPanel int
 
 const (
-	FocusMain    FocusPanel = iota
+	FocusMain FocusPanel = iota
 	FocusPreview
 )
 
@@ -111,19 +111,19 @@ type Model struct {
 	PreviewMode ui.PreviewMode
 
 	// Operation overlay
-	OpMode     OpMode
-	OpSkill    *scan.SkillRecord
-	OpScopes   []harness.Scope
-	OpCursor   int
+	OpMode   OpMode
+	OpSkill  *scan.SkillRecord
+	OpScopes []harness.Scope
+	OpCursor int
 
 	// Terminal size
 	Width, Height int
 
 	// Overlays
-	ShowHelp        bool
-	SearchInput     textinput.Model
-	DeleteInput     textinput.Model // type the skill name to confirm delete
-	DeleteMismatch  bool            // last attempt didn't match
+	ShowHelp       bool
+	SearchInput    textinput.Model
+	DeleteInput    textinput.Model // type the skill name to confirm delete
+	DeleteMismatch bool            // last attempt didn't match
 
 	// Status message (transient)
 	StatusMsg string

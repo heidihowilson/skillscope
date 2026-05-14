@@ -14,7 +14,7 @@ import (
 type PreviewMode int
 
 const (
-	PreviewOff      PreviewMode = iota
+	PreviewOff PreviewMode = iota
 	PreviewRaw
 	PreviewRendered
 )

@@ -6,7 +6,7 @@ import "github.com/charmbracelet/lipgloss"
 type ScopeKind int
 
 const (
-	User         ScopeKind = iota
+	User ScopeKind = iota
 	Project
 	ProjectLocal
 	Plugin

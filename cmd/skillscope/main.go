@@ -20,9 +20,9 @@ import (
 	_ "github.com/heidihowilson/skillscope/internal/harness/opencode"
 
 	// Register views (order = key index).
+	_ "github.com/heidihowilson/skillscope/internal/view/diff"
 	_ "github.com/heidihowilson/skillscope/internal/view/matrix"
 	_ "github.com/heidihowilson/skillscope/internal/view/tree"
-	_ "github.com/heidihowilson/skillscope/internal/view/diff"
 )
 
 var version = "dev"
