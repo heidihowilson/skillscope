@@ -1,6 +1,7 @@
 package view_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -108,29 +109,5 @@ func TestTreeRendersHarnesses(t *testing.T) {
 }
 
 func sizeName(s [2]int) string {
-	return strings_itoa(s[0]) + "x" + strings_itoa(s[1])
-}
-
-// Tiny local itoa to avoid pulling strconv into a test helper.
-func strings_itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	neg := false
-	if n < 0 {
-		neg = true
-		n = -n
-	}
-	var buf [20]byte
-	i := len(buf)
-	for n > 0 {
-		i--
-		buf[i] = byte('0' + n%10)
-		n /= 10
-	}
-	if neg {
-		i--
-		buf[i] = '-'
-	}
-	return string(buf[i:])
+	return strconv.Itoa(s[0]) + "x" + strconv.Itoa(s[1])
 }

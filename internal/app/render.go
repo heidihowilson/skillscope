@@ -225,7 +225,7 @@ func (m *Model) renderHelp() string {
 		"  e               open in $EDITOR",
 		"  c               copy to scope…",
 		"  m               move to scope…",
-		"  d               delete (confirm y)",
+		"  d               delete (re-type skill name to confirm)",
 		"  y               yank path",
 		"  R               re-scan",
 		"",
