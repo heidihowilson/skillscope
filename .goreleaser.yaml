@@ -64,19 +64,24 @@ changelog:
       - "^chore:"
       - "Merge pull request"
 
-brews:
-  - name: skillscope
-    repository:
-      owner: heidihowilson
-      name: homebrew-tap
-      branch: main
-      token: "{{ .Env.GITHUB_TOKEN }}"
-    homepage: https://github.com/heidihowilson/skillscope
-    description: Fast, pluggable TUI for cross-scope skill-file inspection.
-    license: MIT
-    test: |
-      system "#{bin}/skillscope --version"
-    skip_upload: auto # only push on full releases, not snapshots
+# brews: pushes a Homebrew formula to heidihowilson/homebrew-tap on each
+# release. The default GITHUB_TOKEN scope is the current repo only, so
+# cross-repo pushing needs a separate PAT exposed as HOMEBREW_TAP_GITHUB_TOKEN.
+# Uncomment after the tap repo exists AND a PAT secret is configured.
+#
+# brews:
+#   - name: skillscope
+#     repository:
+#       owner: heidihowilson
+#       name: homebrew-tap
+#       branch: main
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     homepage: https://github.com/heidihowilson/skillscope
+#     description: Fast, pluggable TUI for cross-scope skill-file inspection.
+#     license: MIT
+#     test: |
+#       system "#{bin}/skillscope --version"
+#     skip_upload: auto
 
 release:
   prerelease: auto
