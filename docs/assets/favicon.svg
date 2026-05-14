@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="skillscope">
+  <title>skillscope</title>
+  <!-- Simplified for tiny renders: thicker ring, bigger dots, no dashed inner ring, no faint crosshairs -->
+
+  <circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" stroke-width="10"/>
+
+  <!-- Cardinal ticks -->
+  <g stroke="currentColor" stroke-width="8" stroke-linecap="round">
+    <line x1="100" y1="2"   x2="100" y2="18"/>
+    <line x1="100" y1="182" x2="100" y2="198"/>
+    <line x1="2"   y1="100" x2="18"  y2="100"/>
+    <line x1="182" y1="100" x2="198" y2="100"/>
+  </g>
+
+  <!-- Dots — bigger for visibility at small sizes -->
+  <circle cx="100" cy="56"  r="14" fill="#D97757"/>
+  <circle cx="144" cy="100" r="14" fill="#10A37F"/>
+  <circle cx="100" cy="144" r="14" fill="#F54E00"/>
+  <circle cx="56"  cy="100" r="14" fill="#FFCC00"/>
+
+  <!-- Center shadowed dot -->
+  <circle cx="100" cy="100" r="14" fill="currentColor" opacity="0.25"/>
+  <path d="M 100 86 A 14 14 0 0 0 100 114 Z" fill="#4285F4"/>
+</svg>

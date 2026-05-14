@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="skillscope">
+  <title>skillscope</title>
+  <desc>A scope reticle inspecting a constellation of five AI-harness brand-color dots. The center dot is rendered as a shadowed half-circle, echoing the matrix view's shadowed-scope glyph.</desc>
+
+  <!-- Outer lens ring -->
+  <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="5"/>
+
+  <!-- Inner tick ring (dashed, faint) -->
+  <circle cx="100" cy="100" r="76" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 6" opacity="0.45"/>
+
+  <!-- Cardinal tick marks (heavy ticks outside the lens) -->
+  <g stroke="currentColor" stroke-width="4" stroke-linecap="round">
+    <line x1="100" y1="6"   x2="100" y2="16"/>
+    <line x1="100" y1="184" x2="100" y2="194"/>
+    <line x1="6"   y1="100" x2="16"  y2="100"/>
+    <line x1="184" y1="100" x2="194" y2="100"/>
+  </g>
+
+  <!-- Crosshair lines, broken near center so they don't crash the dots -->
+  <g stroke="currentColor" stroke-width="1.5" opacity="0.35">
+    <line x1="20"  y1="100" x2="72"  y2="100"/>
+    <line x1="128" y1="100" x2="180" y2="100"/>
+    <line x1="100" y1="20"  x2="100" y2="72"/>
+    <line x1="100" y1="128" x2="100" y2="180"/>
+  </g>
+
+  <!-- Skill constellation: one dot per harness, in registry order -->
+  <!-- Top: Claude Code · Anthropic orange -->
+  <circle cx="100" cy="60"  r="10" fill="#D97757"/>
+  <!-- Right: Codex CLI · OpenAI green -->
+  <circle cx="140" cy="100" r="10" fill="#10A37F"/>
+  <!-- Bottom: Cursor · International Orange -->
+  <circle cx="100" cy="140" r="10" fill="#F54E00"/>
+  <!-- Left: OpenCode · gold (stand-in; brand is grayscale-only) -->
+  <circle cx="60"  cy="100" r="10" fill="#FFCC00"/>
+
+  <!-- Center: Antigravity · Google Blue · SHADOWED half-dot (◐) -->
+  <!-- Right half (shadowed) -->
+  <circle cx="100" cy="100" r="10" fill="currentColor" opacity="0.25"/>
+  <!-- Left half (filled, the "winning" copy) -->
+  <path d="M 100 90 A 10 10 0 0 0 100 110 Z" fill="#4285F4"/>
+</svg>

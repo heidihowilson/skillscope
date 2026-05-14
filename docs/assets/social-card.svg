@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="skillscope · every SKILL.md, every harness.">
+  <title>skillscope · every SKILL.md, every harness.</title>
+
+  <!-- Background: dark terminal -->
+  <rect width="1280" height="640" fill="#1A202C"/>
+
+  <!-- Subtle grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FFFFFF" stroke-width="0.5" opacity="0.04"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+
+  <!-- Mark, big, top-left-ish -->
+  <g transform="translate(120 130) scale(1.6)">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 6" opacity="0.45"/>
+
+    <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+      <line x1="100" y1="6"   x2="100" y2="16"/>
+      <line x1="100" y1="184" x2="100" y2="194"/>
+      <line x1="6"   y1="100" x2="16"  y2="100"/>
+      <line x1="184" y1="100" x2="194" y2="100"/>
+    </g>
+
+    <g stroke="#FFFFFF" stroke-width="1.5" opacity="0.35">
+      <line x1="20"  y1="100" x2="72"  y2="100"/>
+      <line x1="128" y1="100" x2="180" y2="100"/>
+      <line x1="100" y1="20"  x2="100" y2="72"/>
+      <line x1="100" y1="128" x2="100" y2="180"/>
+    </g>
+
+    <circle cx="100" cy="60"  r="10" fill="#D97757"/>
+    <circle cx="140" cy="100" r="10" fill="#10A37F"/>
+    <circle cx="100" cy="140" r="10" fill="#F54E00"/>
+    <circle cx="60"  cy="100" r="10" fill="#FFCC00"/>
+    <circle cx="100" cy="100" r="10" fill="#FFFFFF" opacity="0.25"/>
+    <path d="M 100 90 A 10 10 0 0 0 100 110 Z" fill="#4285F4"/>
+  </g>
+
+  <!-- Headline, right of mark -->
+  <text x="540" y="270" font-family="'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, monospace" font-size="96" font-weight="700" fill="#FFFFFF" letter-spacing="-3">skillscope</text>
+
+  <!-- Tagline -->
+  <text x="544" y="320" font-family="'JetBrains Mono', monospace" font-size="26" fill="#FFFFFF" opacity="0.65" letter-spacing="0.5">every SKILL.md, every harness.</text>
+
+  <!-- Sub-tagline / install line -->
+  <text x="544" y="392" font-family="'JetBrains Mono', monospace" font-size="22" fill="#FFFFFF" opacity="0.45">a fast, pluggable TUI for cross-scope skill-file inspection.</text>
+
+  <!-- Install hint, terminal-style -->
+  <g transform="translate(544 460)">
+    <text font-family="'JetBrains Mono', monospace" font-size="22" fill="#FFCC00">$ </text>
+    <text x="22" font-family="'JetBrains Mono', monospace" font-size="22" fill="#FFFFFF">go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</text>
+  </g>
+
+  <!-- Harness color legend at bottom -->
+  <g transform="translate(120 580)" font-family="'JetBrains Mono', monospace" font-size="18" fill="#FFFFFF" opacity="0.8">
+    <circle cx="0"   cy="-6" r="6" fill="#D97757"/><text x="14" y="0">claude code</text>
+    <circle cx="200" cy="-6" r="6" fill="#10A37F"/><text x="214" y="0">codex</text>
+    <circle cx="340" cy="-6" r="6" fill="#F54E00"/><text x="354" y="0">cursor</text>
+    <circle cx="490" cy="-6" r="6" fill="#FFCC00"/><text x="504" y="0">opencode</text>
+    <circle cx="660" cy="-6" r="6" fill="#4285F4"/><text x="674" y="0">antigravity</text>
+  </g>
+</svg>

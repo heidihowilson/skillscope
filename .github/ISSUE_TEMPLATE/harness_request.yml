@@ -1,0 +1,39 @@
+name: New harness request
+description: Add support for a new agentic-CLI harness.
+labels: [enhancement, harness]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Harness name
+      placeholder: "e.g. Aider, Continue, Zed AI"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Project URL
+      placeholder: "https://example.com"
+    validations:
+      required: true
+  - type: textarea
+    id: scopes
+    attributes:
+      label: Scope paths
+      description: Where does this harness store its skills? User scope, project scope, etc.
+      placeholder: |
+        user:    ~/.foo/skills/
+        project: <repo>/.foo/skills/
+    validations:
+      required: true
+  - type: input
+    id: color
+    attributes:
+      label: Brand color
+      description: Official hex code if available
+      placeholder: "#xxxxxx"
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Read-only scopes? Plugin support? Quirks?

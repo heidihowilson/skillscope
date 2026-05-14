@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sethgho/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/harness"
 )
 
 type h struct{}

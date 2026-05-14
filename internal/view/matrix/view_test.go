@@ -3,10 +3,10 @@ package matrix_test
 import (
 	"testing"
 
-	"github.com/sethgho/skillscope/internal/app"
-	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
-	_ "github.com/sethgho/skillscope/internal/view/matrix"
+	"github.com/heidihowilson/skillscope/internal/app"
+	"github.com/heidihowilson/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/scan"
+	_ "github.com/heidihowilson/skillscope/internal/view/matrix"
 )
 
 func makeTestModel() *app.Model {

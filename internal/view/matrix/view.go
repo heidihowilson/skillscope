@@ -7,10 +7,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sethgho/skillscope/internal/app"
-	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
-	"github.com/sethgho/skillscope/internal/ui"
+	"github.com/heidihowilson/skillscope/internal/app"
+	"github.com/heidihowilson/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/ui"
 )
 
 type v struct{}

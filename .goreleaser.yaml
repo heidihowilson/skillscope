@@ -1,0 +1,94 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: skillscope
+    main: ./cmd/skillscope
+    binary: skillscope
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+
+archives:
+  - name_template: >-
+      {{- .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    formats: [tar.gz]
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?(fix|bug)(\(.+\))??!?:.+$'
+      order: 1
+    - title: Docs
+      regexp: '^.*?docs?(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 999
+  filters:
+    exclude:
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "Merge pull request"
+
+brews:
+  - name: skillscope
+    repository:
+      owner: heidihowilson
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    homepage: https://github.com/heidihowilson/skillscope
+    description: Fast, pluggable TUI for cross-scope skill-file inspection.
+    license: MIT
+    test: |
+      system "#{bin}/skillscope --version"
+    skip_upload: auto # only push on full releases, not snapshots
+
+release:
+  prerelease: auto
+  draft: false
+  footer: |
+    ---
+    **Full changelog**: https://github.com/heidihowilson/skillscope/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    Install:
+    ```sh
+    # via go install
+    go install github.com/heidihowilson/skillscope/cmd/skillscope@{{ .Tag }}
+
+    # or grab a binary above
+    ```

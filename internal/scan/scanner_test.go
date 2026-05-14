@@ -6,14 +6,14 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/scan"
 
-	_ "github.com/sethgho/skillscope/internal/harness/antigravity"
-	_ "github.com/sethgho/skillscope/internal/harness/claudecode"
-	_ "github.com/sethgho/skillscope/internal/harness/codex"
-	_ "github.com/sethgho/skillscope/internal/harness/cursor"
-	_ "github.com/sethgho/skillscope/internal/harness/opencode"
+	_ "github.com/heidihowilson/skillscope/internal/harness/antigravity"
+	_ "github.com/heidihowilson/skillscope/internal/harness/claudecode"
+	_ "github.com/heidihowilson/skillscope/internal/harness/codex"
+	_ "github.com/heidihowilson/skillscope/internal/harness/cursor"
+	_ "github.com/heidihowilson/skillscope/internal/harness/opencode"
 )
 
 func testdataDir(t *testing.T) string {

@@ -1,0 +1,45 @@
+name: Bug report
+description: Something doesn't work right.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: skillscope version
+      description: Output of `skillscope --version`
+      placeholder: "skillscope v0.1.0 (go1.23.6)"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS / shell
+      placeholder: "macOS 14.5, zsh / Ubuntu 24.04, bash / Windows 11, PowerShell"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: What did you do?
+      description: Steps to reproduce. If a parser bug, attach the offending SKILL.md.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+      description: Paste any error output. If the TUI is involved, a screenshot or asciinema link is great.
+    validations:
+      required: true
+  - type: textarea
+    id: json
+    attributes:
+      label: skillscope --json output
+      description: If relevant, the JSON dump for the affected scope. Redact paths if you want.
+      render: json

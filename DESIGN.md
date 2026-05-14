@@ -16,8 +16,8 @@ its registry from `init()`. The plugin is wired into the binary by a single
 blank-import line in `cmd/skillscope/main.go`:
 
 ```go
-_ "github.com/sethgho/skillscope/internal/harness/<id>"
-_ "github.com/sethgho/skillscope/internal/view/<id>"
+_ "github.com/heidihowilson/skillscope/internal/harness/<id>"
+_ "github.com/heidihowilson/skillscope/internal/view/<id>"
 ```
 
 No central switch statement, no factory map, no config file.

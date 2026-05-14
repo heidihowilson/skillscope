@@ -1,30 +1,48 @@
-# skillscope
+<p align="center">
+  <img src="docs/assets/logo-wordmark.svg" alt="skillscope" width="540">
+</p>
+
+<p align="center">
+  <em>Every <code>SKILL.md</code>, every harness.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/heidihowilson/skillscope/actions/workflows/ci.yml"><img src="https://github.com/heidihowilson/skillscope/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://goreportcard.com/report/github.com/heidihowilson/skillscope"><img src="https://goreportcard.com/badge/github.com/heidihowilson/skillscope" alt="Go Report"></a>
+  <a href="https://github.com/heidihowilson/skillscope/releases"><img src="https://img.shields.io/github/v/release/heidihowilson/skillscope" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/heidihowilson/skillscope" alt="License"></a>
+  <a href="https://heidihowilson.github.io/skillscope/"><img src="https://img.shields.io/badge/docs-pages-blue" alt="Docs"></a>
+</p>
 
 A fast, pluggable TUI for inspecting `SKILL.md` files across every agentic-CLI
-harness on your machine. See your skills at a glance — broken down by scope
-(user / project / project-local) and harness (Claude Code, Codex CLI, Cursor,
-OpenCode, Antigravity) — and move them between scopes in 1–2 keystrokes.
+harness on your machine — Claude Code, Codex CLI, Cursor, OpenCode, Antigravity —
+broken down by scope (user / project / project-local) and harness, with copy /
+move / delete in 1–2 keystrokes.
 
 ```
-┌ Matrix ┐ Tree   Diff
-skill                claude/user  claude/proj  codex/user  cursor/user  …
-test-skill           ●            ·            ·           ·
-multi-scope-skill    ●            ◐            ·           ·
-codex-skill          ·            ·            ●           ·
+┌ 1 Matrix ┐ 2 Tree   3 Diff
+Harnesses:  ● claude-code  ● codex  ● cursor  ● opencode  ● antigravity
+
+skill              user                       project                    local
+────────────────────────────────────────────────────────────────────────────────
+git-helper         ● ● ●                      ·                          ·
+multi-scope-skill  ●                          ◐                          ·
+local-skill        ·                          ·                          ●
 …
-harnesses:[claude]  scope:user  q:"test"  3/14 skills
+  ● present   ◐ shadowed (higher scope wins)   · absent   ! parse error
+[/] search  [f] filter  [p] preview  [c] copy  [m] move  [d] delete  [?] help
 ```
 
 ## Install
 
 ```sh
-go install github.com/sethgho/skillscope/cmd/skillscope@latest
+go install github.com/heidihowilson/skillscope/cmd/skillscope@latest
 ```
 
 Or from source:
 
 ```sh
-git clone https://github.com/sethgho/skillscope
+git clone https://github.com/heidihowilson/skillscope
 cd skillscope
 go install ./cmd/skillscope
 ```
@@ -110,7 +128,7 @@ package myharness
 import (
     "path/filepath"
     "github.com/charmbracelet/lipgloss"
-    "github.com/sethgho/skillscope/internal/harness"
+    "github.com/heidihowilson/skillscope/internal/harness"
 )
 
 type h struct{}
@@ -139,7 +157,7 @@ func init() { harness.Register(h{}) }
 Then add a blank-import in `cmd/skillscope/main.go`:
 
 ```go
-_ "github.com/sethgho/skillscope/internal/harness/myharness"
+_ "github.com/heidihowilson/skillscope/internal/harness/myharness"
 ```
 
 ## Adding a view
@@ -153,7 +171,7 @@ package myview
 import (
     "fmt"
     tea "github.com/charmbracelet/bubbletea"
-    "github.com/sethgho/skillscope/internal/app"
+    "github.com/heidihowilson/skillscope/internal/app"
 )
 
 type v struct{}

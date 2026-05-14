@@ -4,20 +4,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sethgho/skillscope/internal/app"
-	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/app"
+	"github.com/heidihowilson/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/scan"
 
 	// Register everything.
-	_ "github.com/sethgho/skillscope/internal/harness/antigravity"
-	_ "github.com/sethgho/skillscope/internal/harness/claudecode"
-	_ "github.com/sethgho/skillscope/internal/harness/codex"
-	_ "github.com/sethgho/skillscope/internal/harness/cursor"
-	_ "github.com/sethgho/skillscope/internal/harness/opencode"
+	_ "github.com/heidihowilson/skillscope/internal/harness/antigravity"
+	_ "github.com/heidihowilson/skillscope/internal/harness/claudecode"
+	_ "github.com/heidihowilson/skillscope/internal/harness/codex"
+	_ "github.com/heidihowilson/skillscope/internal/harness/cursor"
+	_ "github.com/heidihowilson/skillscope/internal/harness/opencode"
 
-	_ "github.com/sethgho/skillscope/internal/view/diff"
-	_ "github.com/sethgho/skillscope/internal/view/matrix"
-	_ "github.com/sethgho/skillscope/internal/view/tree"
+	_ "github.com/heidihowilson/skillscope/internal/view/diff"
+	_ "github.com/heidihowilson/skillscope/internal/view/matrix"
+	_ "github.com/heidihowilson/skillscope/internal/view/tree"
 )
 
 func newTestModel(width, height int) *app.Model {

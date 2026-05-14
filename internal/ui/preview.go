@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sethgho/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/scan"
 	"gopkg.in/yaml.v3"
 )
 

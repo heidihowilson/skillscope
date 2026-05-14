@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sethgho/skillscope/internal/ui"
+	"github.com/heidihowilson/skillscope/internal/ui"
 )
 
 const minWidth, minHeight = 80, 24

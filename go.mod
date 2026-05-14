@@ -1,4 +1,4 @@
-module github.com/sethgho/skillscope
+module github.com/heidihowilson/skillscope
 
 go 1.22
 

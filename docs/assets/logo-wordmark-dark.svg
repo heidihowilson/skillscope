@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" width="600" height="160" role="img" aria-label="skillscope">
+  <title>skillscope</title>
+  <desc>skillscope wordmark — white chrome for dark backgrounds.</desc>
+
+  <g transform="translate(8 8) scale(0.72)">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 6" opacity="0.45"/>
+
+    <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+      <line x1="100" y1="6"   x2="100" y2="16"/>
+      <line x1="100" y1="184" x2="100" y2="194"/>
+      <line x1="6"   y1="100" x2="16"  y2="100"/>
+      <line x1="184" y1="100" x2="194" y2="100"/>
+    </g>
+
+    <g stroke="#FFFFFF" stroke-width="1.5" opacity="0.35">
+      <line x1="20"  y1="100" x2="72"  y2="100"/>
+      <line x1="128" y1="100" x2="180" y2="100"/>
+      <line x1="100" y1="20"  x2="100" y2="72"/>
+      <line x1="100" y1="128" x2="100" y2="180"/>
+    </g>
+
+    <circle cx="100" cy="60"  r="10" fill="#D97757"/>
+    <circle cx="140" cy="100" r="10" fill="#10A37F"/>
+    <circle cx="100" cy="140" r="10" fill="#F54E00"/>
+    <circle cx="60"  cy="100" r="10" fill="#FFCC00"/>
+    <circle cx="100" cy="100" r="10" fill="#FFFFFF" opacity="0.25"/>
+    <path d="M 100 90 A 10 10 0 0 0 100 110 Z" fill="#4285F4"/>
+  </g>
+
+  <text x="170" y="98" font-family="'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, monospace" font-size="64" font-weight="700" fill="#FFFFFF" letter-spacing="-2">skillscope</text>
+  <text x="172" y="126" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" fill="#FFFFFF" opacity="0.55" letter-spacing="0.5">every SKILL.md, every harness.</text>
+</svg>

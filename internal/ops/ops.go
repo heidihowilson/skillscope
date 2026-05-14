@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/harness"
+	"github.com/heidihowilson/skillscope/internal/scan"
 )
 
 // Copy copies a skill directory into destScope.
