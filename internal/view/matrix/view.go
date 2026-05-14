@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/sethgho/skillscope/internal/app"
 	"github.com/sethgho/skillscope/internal/harness"
-	"github.com/sethgho/skillscope/internal/scan"
 	"github.com/sethgho/skillscope/internal/ui"
 )
 
@@ -37,24 +36,30 @@ func (vv v) Hints(m *app.Model) []ui.ActionHint {
 	}
 }
 
-// scopeKindLabel returns a short label for the matrix header.
 func scopeKindLabel(k harness.ScopeKind) string {
 	switch k {
 	case harness.User:
 		return "user"
 	case harness.Project:
-		return "proj"
+		return "project"
 	case harness.ProjectLocal:
 		return "local"
 	case harness.Plugin:
-		return "plug"
+		return "plugin"
 	}
 	return "?"
 }
 
-type columnGroup struct {
-	harness string
-	cols    []harness.ScopeKind
+// cell describes everything we need to render the dots for one
+// (skill_name, scope_kind) slot.
+type cell struct {
+	dots []cellDot
+}
+
+type cellDot struct {
+	harness  string
+	shadowed bool
+	parseErr bool
 }
 
 func (vv v) Render(m *app.Model, width, height int) string {
@@ -63,88 +68,56 @@ func (vv v) Render(m *app.Model, width, height int) string {
 		return ui.DimStyle.Width(width).Height(height).Render("  no skills found")
 	}
 
-	// Group columns by harness, in stable registry order.
-	groups := buildColumnGroups(m)
-	if len(groups) == 0 {
-		return ui.DimStyle.Width(width).Height(height).Render("  no harnesses")
+	// Determine which scope kinds actually have any data, in fixed order.
+	kindOrder := []harness.ScopeKind{harness.User, harness.Project, harness.ProjectLocal, harness.Plugin}
+	kindsPresent := map[harness.ScopeKind]bool{}
+	for _, sk := range m.Skills {
+		kindsPresent[sk.Scope.Kind] = true
 	}
-
-	// Count total columns.
-	totalCols := 0
-	for _, g := range groups {
-		totalCols += len(g.cols)
-	}
-
-	// Pick a name column width that grows with the longest visible name,
-	// capped to a reasonable share of the screen.
-	maxName := 6
-	for _, sk := range skills {
-		if len(sk.Name) > maxName {
-			maxName = len(sk.Name)
+	var visibleKinds []harness.ScopeKind
+	for _, k := range kindOrder {
+		if kindsPresent[k] {
+			visibleKinds = append(visibleKinds, k)
 		}
 	}
-	nameW := maxName + 2
-	if nameW > width/3 {
-		nameW = width / 3
-	}
-	if nameW < 14 {
-		nameW = 14
+	if len(visibleKinds) == 0 {
+		return ui.DimStyle.Width(width).Height(height).Render("  no scopes")
 	}
 
-	// Distribute remaining width across columns; minimum 6 chars/col.
-	avail := width - nameW - 2
-	cellW := avail / totalCols
-	if cellW < 6 {
-		cellW = 6
-	}
-	if cellW > 14 {
-		cellW = 14
-	}
-
-	// Build row 1 of header: harness names, each spanning its scope cells.
-	var hdrTop strings.Builder
-	hdrTop.WriteString(strings.Repeat(" ", nameW))
-	for _, g := range groups {
-		span := cellW * len(g.cols)
-		label := g.harness
-		// Truncate or center.
-		if len(label) > span-1 {
-			label = label[:span-1]
+	// Build the harness presence table:
+	//   table[name][kind] = cell
+	// Walking m.Skills (not filtered) so dots reflect total presence; the
+	// filter only controls which *rows* show up.
+	table := map[string]map[harness.ScopeKind]*cell{}
+	for _, sk := range m.Skills {
+		if table[sk.Name] == nil {
+			table[sk.Name] = map[harness.ScopeKind]*cell{}
 		}
-		pad := span - len(label)
-		left := pad / 2
-		right := pad - left
-		colored := lipgloss.NewStyle().
-			Foreground(ui.HarnessColor(g.harness)).
-			Bold(true).
-			Render(label)
-		hdrTop.WriteString(strings.Repeat(" ", left) + colored + strings.Repeat(" ", right))
+		c := table[sk.Name][sk.Scope.Kind]
+		if c == nil {
+			c = &cell{}
+			table[sk.Name][sk.Scope.Kind] = c
+		}
+		c.dots = append(c.dots, cellDot{
+			harness:  sk.Scope.Harness,
+			shadowed: m.IsShadowed(sk),
+			parseErr: sk.ParseErr != nil,
+		})
 	}
-
-	// Underline row showing harness boundaries.
-	var hdrRule strings.Builder
-	hdrRule.WriteString(strings.Repeat(" ", nameW))
-	for _, g := range groups {
-		span := cellW * len(g.cols)
-		rule := strings.Repeat("─", span-1) + " "
-		hdrRule.WriteString(lipgloss.NewStyle().Foreground(ui.HarnessColor(g.harness)).Render(rule))
+	// Stable dot order within a cell: registry order.
+	harnessOrder := map[string]int{}
+	for i, h := range m.Harnesses {
+		harnessOrder[h.ID()] = i
 	}
-
-	// Build row 2 of header: scope kind under each cell.
-	var hdrBot strings.Builder
-	hdrBot.WriteString(ui.BoldStyle.Render(fmt.Sprintf("%-*s", nameW, "skill")))
-	for _, g := range groups {
-		for _, k := range g.cols {
-			label := scopeKindLabel(k)
-			cell := lipgloss.NewStyle().
-				Foreground(ui.ColorFgDim).
-				Width(cellW).
-				Render(label)
-			hdrBot.WriteString(cell)
+	for _, byKind := range table {
+		for _, c := range byKind {
+			sort.Slice(c.dots, func(i, j int) bool {
+				return harnessOrder[c.dots[i].harness] < harnessOrder[c.dots[j].harness]
+			})
 		}
 	}
 
-	// Skill name index (deduped, sorted).
+	// Names visible after filtering, deduped, sorted.
 	nameSet := map[string]bool{}
 	for _, sk := range skills {
 		nameSet[sk.Name] = true
@@ -155,36 +128,66 @@ func (vv v) Render(m *app.Model, width, height int) string {
 	}
 	sort.Strings(names)
 
-	// Lookup table: name -> harness -> kind -> record
-	lookup := map[string]map[string]map[harness.ScopeKind]scan.SkillRecord{}
-	for _, sk := range m.Skills {
-		if lookup[sk.Name] == nil {
-			lookup[sk.Name] = map[string]map[harness.ScopeKind]scan.SkillRecord{}
+	// Column widths.
+	maxName := 8
+	for _, n := range names {
+		if len(n) > maxName {
+			maxName = len(n)
 		}
-		if lookup[sk.Name][sk.Scope.Harness] == nil {
-			lookup[sk.Name][sk.Scope.Harness] = map[harness.ScopeKind]scan.SkillRecord{}
-		}
-		lookup[sk.Name][sk.Scope.Harness][sk.Scope.Kind] = sk
+	}
+	nameW := maxName + 2
+	if nameW > width/2 {
+		nameW = width / 2
+	}
+	if nameW < 16 {
+		nameW = 16
 	}
 
-	// Compose body rows.
-	maxBodyRows := height - 5
-	if maxBodyRows < 1 {
-		maxBodyRows = 1
+	avail := width - nameW
+	cellW := avail / len(visibleKinds)
+	if cellW < 10 {
+		cellW = 10
+	}
+
+	// Top legend: one colored dot per registered harness.
+	legend := buildLegend(m.Harnesses)
+
+	// Header.
+	hdr := lipgloss.NewStyle().Bold(true).Render(fmt.Sprintf("%-*s", nameW, "skill"))
+	for _, k := range visibleKinds {
+		hdr += lipgloss.NewStyle().
+			Foreground(ui.ColorFg).Bold(true).
+			Width(cellW).Render(scopeKindLabel(k))
+	}
+	rule := ui.DimStyle.Render(strings.Repeat("─", width))
+
+	// Compute selected row name so we can highlight it.
+	selName := ""
+	if sk := m.SelectedSkill(); sk != nil {
+		selName = sk.Name
+	}
+
+	// Body rows.
+	maxBody := height - 5
+	if maxBody < 1 {
+		maxBody = 1
 	}
 	visStart := 0
-	if m.Cursor >= maxBodyRows {
-		visStart = m.Cursor - maxBodyRows + 1
+	// Find selected name's index in the visible list to keep it on-screen.
+	selIdx := -1
+	for i, n := range names {
+		if n == selName {
+			selIdx = i
+			break
+		}
+	}
+	if selIdx >= 0 && selIdx >= maxBody {
+		visStart = selIdx - maxBody + 1
 	}
 
 	var body []string
-	for i, name := range names {
-		if i < visStart {
-			continue
-		}
-		if len(body) >= maxBodyRows {
-			break
-		}
+	for i := visStart; i < len(names) && len(body) < maxBody; i++ {
+		name := names[i]
 
 		nameLabel := name
 		if len(nameLabel) > nameW-1 {
@@ -194,85 +197,65 @@ func (vv v) Render(m *app.Model, width, height int) string {
 		var row strings.Builder
 		row.WriteString(fmt.Sprintf("%-*s", nameW, nameLabel))
 
-		for _, g := range groups {
-			for _, k := range g.cols {
-				sk, ok := lookup[name][g.harness][k]
-				var glyph string
-				var color lipgloss.Color
-				switch {
-				case !ok:
-					glyph = "·"
-					color = ui.ColorAbsent
-				case sk.ParseErr != nil:
-					glyph = "!"
-					color = ui.ColorError
-				case m.IsShadowed(sk):
-					glyph = "◐"
-					color = ui.ColorShadow
-				default:
-					glyph = "●"
-					color = ui.HarnessColor(g.harness)
-				}
-				cell := lipgloss.NewStyle().Foreground(color).Width(cellW).Render(glyph)
-				row.WriteString(cell)
-			}
+		for _, k := range visibleKinds {
+			row.WriteString(renderCell(table[name][k], cellW))
 		}
 
 		line := row.String()
-		if i == m.Cursor {
+		if name == selName {
 			line = ui.SelectedStyle.Render(line)
 		}
 		body = append(body, line)
 	}
 
-	legend := ui.DimStyle.Render("  ● present  ◐ shadowed (higher scope wins)  · absent  ! parse error")
+	hint := ui.DimStyle.Render("  ● present  ◐ shadowed (higher scope wins in same harness)  · absent  ! parse error")
 
-	rows := []string{
-		hdrTop.String(),
-		hdrRule.String(),
-		hdrBot.String(),
-		ui.DimStyle.Render(strings.Repeat("─", width)),
-	}
-	rows = append(rows, body...)
-	rows = append(rows, "")
-	rows = append(rows, legend)
-
-	return strings.Join(rows, "\n")
+	out := []string{legend, "", hdr, rule}
+	out = append(out, body...)
+	out = append(out, "", hint)
+	return strings.Join(out, "\n")
 }
 
-func buildColumnGroups(m *app.Model) []columnGroup {
-	// Discover which (harness, kind) pairs actually exist in the scan.
-	have := map[string]map[harness.ScopeKind]bool{}
-	for _, sk := range m.Skills {
-		if have[sk.Scope.Harness] == nil {
-			have[sk.Scope.Harness] = map[harness.ScopeKind]bool{}
-		}
-		have[sk.Scope.Harness][sk.Scope.Kind] = true
+// renderCell turns a cell into a width-padded string of colored dots.
+// Each dot is the harness color; shadowed = ◐, parse error = ! in red.
+func renderCell(c *cell, width int) string {
+	if c == nil || len(c.dots) == 0 {
+		return lipgloss.NewStyle().
+			Foreground(ui.ColorAbsent).
+			Width(width).
+			Render("·")
 	}
-
-	order := []harness.ScopeKind{harness.User, harness.Project, harness.ProjectLocal, harness.Plugin}
-
-	var groups []columnGroup
-	for _, h := range m.Harnesses {
-		hid := h.ID()
-		if _, ok := have[hid]; !ok {
-			continue
+	var dots []string
+	for _, d := range c.dots {
+		glyph := "●"
+		color := ui.HarnessColor(d.harness)
+		switch {
+		case d.parseErr:
+			glyph = "!"
+			color = ui.ColorError
+		case d.shadowed:
+			glyph = "◐"
 		}
-		// Apply harness filter.
-		if len(m.HarnessFilter) > 0 && !m.HarnessFilter[hid] {
-			continue
-		}
-		g := columnGroup{harness: hid}
-		for _, k := range order {
-			if have[hid][k] {
-				g.cols = append(g.cols, k)
-			}
-		}
-		if len(g.cols) > 0 {
-			groups = append(groups, g)
-		}
+		dots = append(dots, lipgloss.NewStyle().Foreground(color).Render(glyph))
 	}
-	return groups
+	content := strings.Join(dots, " ")
+	// Pad to cell width.
+	pad := width - lipgloss.Width(content)
+	if pad > 0 {
+		content += strings.Repeat(" ", pad)
+	}
+	return content
+}
+
+// buildLegend renders the harness color key.
+func buildLegend(harnesses []harness.Harness) string {
+	var parts []string
+	parts = append(parts, ui.DimStyle.Render("Harnesses:"))
+	for _, h := range harnesses {
+		dot := lipgloss.NewStyle().Foreground(h.Color()).Render("●")
+		parts = append(parts, dot+" "+h.ID())
+	}
+	return strings.Join(parts, "  ")
 }
 
 func init() { app.RegisterView(v{}) }
