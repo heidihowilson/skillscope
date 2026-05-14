@@ -30,9 +30,10 @@ func (m *Model) View() string {
 	}
 
 	tabBar := m.renderTabBar()
+	toolbar := m.renderToolbar()
 	statusBar := m.renderStatusBar()
 
-	contentH := m.Height - lipgloss.Height(tabBar) - lipgloss.Height(statusBar)
+	contentH := m.Height - lipgloss.Height(tabBar) - lipgloss.Height(toolbar) - lipgloss.Height(statusBar)
 	if contentH < 1 {
 		contentH = 1
 	}
@@ -60,10 +61,71 @@ func (m *Model) View() string {
 
 	if m.SearchActive {
 		searchBar := m.renderSearchBar()
-		return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, searchBar)
+		return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, toolbar, searchBar)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, statusBar)
+	return lipgloss.JoinVertical(lipgloss.Left, tabBar, content, toolbar, statusBar)
+}
+
+// renderToolbar builds the contextual action hint row. Views can implement
+// ActionHinter to override the default hint set.
+func (m *Model) renderToolbar() string {
+	var hints []ui.ActionHint
+
+	// Operation overlays take priority.
+	switch m.OpMode {
+	case OpCopyPicker, OpMovePicker:
+		hints = []ui.ActionHint{
+			{Key: "1-9", Label: "pick scope"},
+			{Key: "↑↓", Label: "navigate"},
+			{Key: "Enter", Label: "confirm"},
+			{Key: "Esc", Label: "cancel"},
+		}
+		return ui.RenderToolbar(hints, m.Width)
+	case OpDeleteConfirm:
+		hints = []ui.ActionHint{
+			{Key: "y", Label: "confirm delete"},
+			{Key: "Esc", Label: "cancel"},
+		}
+		return ui.RenderToolbar(hints, m.Width)
+	}
+
+	if m.SearchActive {
+		hints = []ui.ActionHint{
+			{Key: "Enter", Label: "apply"},
+			{Key: "Esc", Label: "cancel"},
+		}
+		return ui.RenderToolbar(hints, m.Width)
+	}
+
+	if m.PreviewMode != ui.PreviewOff {
+		hints = []ui.ActionHint{
+			{Key: "p", Label: "cycle preview"},
+			{Key: "Esc", Label: "close preview"},
+			{Key: "Tab", Label: "focus pane"},
+			{Key: "c", Label: "copy"},
+			{Key: "m", Label: "move"},
+		}
+		return ui.RenderToolbar(hints, m.Width)
+	}
+
+	// View-specific hints when available.
+	if len(m.Views) > 0 && m.ActiveView < len(m.Views) {
+		if hinter, ok := m.Views[m.ActiveView].(ActionHinter); ok {
+			return ui.RenderToolbar(hinter.Hints(m), m.Width)
+		}
+	}
+
+	// Default hints.
+	hints = []ui.ActionHint{
+		{Key: "/", Label: "search"},
+		{Key: "f", Label: "filter"},
+		{Key: "p", Label: "preview"},
+		{Key: "c", Label: "copy"},
+		{Key: "m", Label: "move"},
+		{Key: "d", Label: "delete"},
+	}
+	return ui.RenderToolbar(hints, m.Width)
 }
 
 func (m *Model) renderTabBar() string {
@@ -133,7 +195,7 @@ func (m *Model) renderHelp() string {
 		"",
 		ui.BoldStyle.Render("Filters"),
 		"  /               fuzzy search",
-		"  Esc             clear search",
+		"  Esc             close preview / clear search",
 		"  f               cycle harness filter",
 		"  F               clear harness filter",
 		"  s               cycle scope filter",

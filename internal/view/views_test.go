@@ -17,7 +17,6 @@ import (
 
 	_ "github.com/sethgho/skillscope/internal/view/diff"
 	_ "github.com/sethgho/skillscope/internal/view/gallery"
-	_ "github.com/sethgho/skillscope/internal/view/heatmap"
 	_ "github.com/sethgho/skillscope/internal/view/matrix"
 	_ "github.com/sethgho/skillscope/internal/view/tree"
 	_ "github.com/sethgho/skillscope/internal/view/venn"
@@ -89,7 +88,7 @@ func TestGalleryListsAllViews(t *testing.T) {
 			continue
 		}
 		out := v.Render(m, 100, 30)
-		for _, id := range []string{"matrix", "tree", "venn", "diff", "heatmap", "gallery"} {
+		for _, id := range []string{"matrix", "tree", "venn", "diff", "gallery"} {
 			if !strings.Contains(out, id) {
 				t.Errorf("gallery missing view id %q", id)
 			}
@@ -107,21 +106,6 @@ func TestVennShowsCounts(t *testing.T) {
 		out := v.Render(m, 100, 30)
 		if !strings.Contains(out, "claude-code") {
 			t.Errorf("venn missing harness id: %q", out)
-		}
-	}
-}
-
-func TestHeatmapRendersHarnesses(t *testing.T) {
-	m := newTestModel(100, 30)
-	for _, v := range app.AllViews() {
-		if v.ID() != "heatmap" {
-			continue
-		}
-		out := v.Render(m, 100, 30)
-		for _, hid := range []string{"claude-code", "codex", "cursor"} {
-			if !strings.Contains(out, hid) {
-				t.Errorf("heatmap missing harness %q", hid)
-			}
 		}
 	}
 }

@@ -84,6 +84,12 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, textinput.Blink
 
 	case "esc":
+		// Priority: preview > search filter > shadowed-only.
+		if m.PreviewMode != 0 {
+			m.PreviewMode = 0
+			m.Focus = FocusMain
+			return m, nil
+		}
 		m.SearchQuery = ""
 		m.ShadowedOnly = false
 		return m, nil

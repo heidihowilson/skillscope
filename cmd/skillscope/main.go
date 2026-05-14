@@ -19,13 +19,12 @@ import (
 	_ "github.com/sethgho/skillscope/internal/harness/cursor"
 	_ "github.com/sethgho/skillscope/internal/harness/opencode"
 
-	// Register views.
-	_ "github.com/sethgho/skillscope/internal/view/diff"
-	_ "github.com/sethgho/skillscope/internal/view/gallery"
-	_ "github.com/sethgho/skillscope/internal/view/heatmap"
+	// Register views (order = key index).
 	_ "github.com/sethgho/skillscope/internal/view/matrix"
 	_ "github.com/sethgho/skillscope/internal/view/tree"
 	_ "github.com/sethgho/skillscope/internal/view/venn"
+	_ "github.com/sethgho/skillscope/internal/view/diff"
+	_ "github.com/sethgho/skillscope/internal/view/gallery"
 )
 
 var version = "dev"

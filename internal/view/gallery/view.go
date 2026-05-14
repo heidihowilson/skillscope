@@ -14,7 +14,7 @@ type v struct{}
 
 func (v) ID() string      { return "gallery" }
 func (v) Name() string    { return "Gallery" }
-func (v) KeyHint() string { return "6" }
+func (v) KeyHint() string { return "5" }
 
 func (v) Init(m *app.Model) tea.Cmd { return nil }
 

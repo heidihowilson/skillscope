@@ -18,6 +18,13 @@ type View interface {
 	Render(m *Model, width, height int) string
 }
 
+// ActionHinter is an optional interface views can implement to populate
+// the contextual toolbar at the bottom of the screen. Views that don't
+// implement it get the default keymap hints.
+type ActionHinter interface {
+	Hints(m *Model) []ui.ActionHint
+}
+
 var viewRegistry []View
 
 // RegisterView adds a view to the global registry. Call from init().

@@ -57,7 +57,7 @@ boots the TUI pointed at `testdata/`.
 | `q` / `Ctrl+C` | quit |
 | `?` | help overlay |
 | `/` | fuzzy search |
-| `Esc` | clear filter |
+| `Esc` | close preview / clear filter |
 | `1`–`9` | jump to view by index |
 | `v` / `V` | cycle views forward / back |
 | `f` | cycle harness filter |
@@ -91,15 +91,14 @@ Picker shortcut: e.g. `c 3` = "copy to scope 3."
 
 ## Views
 
-1. **Matrix** — rows = skills, columns = (harness × scope). `●` present,
-   `◐` shadowed, `·` absent.
+1. **Matrix** — rows = skills, columns = (harness × scope) with a grouped
+   header. `●` present, `◐` shadowed, `·` absent, `!` parse error.
 2. **Tree** — collapsible Harness → Scope → Skill.
-3. **Venn** — User / Project / Project-Local intersection for a single
-   harness, with selected skill's membership lit up.
+3. **Venn** — for one harness, breaks every skill into its user / project /
+   local intersection regions with counts and per-region lists.
 4. **Diff** — side-by-side frontmatter + body for skills in multiple scopes
    within one harness.
-5. **Heatmap** — harness × scope grid shaded by skill count.
-6. **Gallery** — lists every registered view (proves the plugin surface works).
+5. **Gallery** — lists every registered view (proves the plugin surface works).
 
 ## Adding a harness
 
