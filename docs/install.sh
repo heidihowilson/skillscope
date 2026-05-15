@@ -104,13 +104,56 @@ ARCHIVE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${V
 CHECKSUMS_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${VERSION}/checksums.txt"
 
 # --- install dir resolution -------------------------------------------------
+#
+# Strategy:
+#   1. If SKILLSCOPE_INSTALL_DIR is set, honor it.
+#   2. If running as root, install to /usr/local/bin.
+#   3. Otherwise, prefer the first PATH directory we can write to. This
+#      matters especially on macOS, where $HOME/.local/bin is NOT on the
+#      default PATH (Linux distros typically have it, macOS doesn't), so
+#      the previous fallback installed the binary somewhere `skillscope`
+#      wouldn't be found.
+#   4. Final fallback: $HOME/.local/bin, with a loud PATH warning later.
+
+is_on_path() {
+    case ":${PATH}:" in
+        *":$1:"*) return 0 ;;
+        *)        return 1 ;;
+    esac
+}
+
+# Returns true if we can already write to $1, OR if its parent exists and
+# is writable so we can mkdir $1.
+is_writable() {
+    if [ -d "$1" ] && [ -w "$1" ]; then return 0; fi
+    parent=$(dirname "$1")
+    [ -d "$parent" ] && [ -w "$parent" ]
+}
 
 if [ -n "${SKILLSCOPE_INSTALL_DIR:-}" ]; then
     INSTALL_DIR="$SKILLSCOPE_INSTALL_DIR"
 elif [ "$(id -u 2>/dev/null || echo 0)" = "0" ]; then
     INSTALL_DIR="/usr/local/bin"
 else
-    INSTALL_DIR="$HOME/.local/bin"
+    INSTALL_DIR=""
+    # Candidates, in priority order. Picked because they're conventional
+    # user-bin dirs on macOS / Linux that are often (but not always) on
+    # PATH.
+    for candidate in \
+        "$HOME/.local/bin" \
+        "$HOME/bin" \
+        "/opt/homebrew/bin" \
+        "/usr/local/bin"; do
+        if is_on_path "$candidate" && is_writable "$candidate"; then
+            INSTALL_DIR="$candidate"
+            break
+        fi
+    done
+    # Nothing on PATH was writable — fall back to ~/.local/bin and warn
+    # loudly later about the PATH not containing it.
+    if [ -z "$INSTALL_DIR" ]; then
+        INSTALL_DIR="$HOME/.local/bin"
+    fi
 fi
 
 # --- staging dir + cleanup --------------------------------------------------
@@ -160,15 +203,35 @@ info ""
 info "  installed: $DEST"
 info ""
 
-# Helpful PATH hint when installing to ~/.local/bin and it's not on PATH.
-case ":$PATH:" in
-    *":$INSTALL_DIR:"*) ;;
-    *)
-        info "  note: $INSTALL_DIR is not on your PATH."
-        info "        add this to your shell rc:"
-        info "            export PATH=\"$INSTALL_DIR:\$PATH\""
-        info ""
-        ;;
-esac
+# If the install dir isn't on PATH, the binary won't be reachable by
+# name. This is the most common failure case (especially on macOS, where
+# $HOME/.local/bin is not on the default PATH). Make the fix
+# unmissable, including the exact shell-rc snippet to paste.
+if ! is_on_path "$INSTALL_DIR"; then
+    # Guess the user's shell rc file from $SHELL.
+    case "${SHELL:-}" in
+        */zsh)  rc_file="${ZDOTDIR:-$HOME}/.zshrc" ;;
+        */bash) rc_file="$HOME/.bashrc"
+                # macOS Terminal.app sources ~/.bash_profile, not ~/.bashrc
+                [ "$OS" = "darwin" ] && rc_file="$HOME/.bash_profile" ;;
+        */fish) rc_file="$HOME/.config/fish/config.fish" ;;
+        *)      rc_file="your shell rc" ;;
+    esac
 
-info "  run \`$BIN_NAME --version\` to verify."
+    info "  ⚠  $INSTALL_DIR is not on your PATH — \`$BIN_NAME\` won't be found yet."
+    info ""
+    info "  To fix, add it to PATH. One-liner for your shell:"
+    info ""
+    case "${SHELL:-}" in
+        */fish)
+            info "      echo 'set -x PATH \"$INSTALL_DIR\" \$PATH' >> $rc_file && source $rc_file"
+            ;;
+        *)
+            info "      echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> $rc_file && source $rc_file"
+            ;;
+    esac
+    info ""
+    info "  Or run \`$DEST --version\` directly to verify the install."
+else
+    info "  Run \`$BIN_NAME --version\` to verify."
+fi

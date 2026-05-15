@@ -41,7 +41,9 @@ local-skill        ·                          ·                          ●
 curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh
 ```
 
-Pin a version with `SKILLSCOPE_VERSION=v0.1.0 …`. Override the install dir with `SKILLSCOPE_INSTALL_DIR=…`. The script verifies sha256 against the release's `checksums.txt` and refuses to run as root unless `SKILLSCOPE_ACCEPT_ROOT=1` is set.
+The installer picks the first directory on your `PATH` it can write to (preferring `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/bin` in that order). If none are on `PATH`, it falls back to `~/.local/bin` and prints the exact shell-rc snippet you need to paste to make `skillscope` reachable.
+
+Pin a version with `SKILLSCOPE_VERSION=v0.1.0 …`. Override the install dir entirely with `SKILLSCOPE_INSTALL_DIR=…`. Refuses to run as root unless `SKILLSCOPE_ACCEPT_ROOT=1`. sha256 is verified against the release's `checksums.txt`.
 
 **Homebrew (macOS + Linux):**
 
