@@ -64,12 +64,19 @@ changelog:
       - "^chore:"
       - "Merge pull request"
 
-# Cross-repo publishing — both brews and scoops push to separate repos
-# (heidihowilson/homebrew-tap, heidihowilson/scoop-bucket). The default
-# GITHUB_TOKEN scope is the current repo only, so each needs its own PAT
-# exposed as a secret. Uncomment the block once the corresponding secret
-# is configured. The bucket / tap repos already exist; the initial v0.1.0
-# manifests in both were bootstrapped by hand.
+# Cross-repo publishing — brews, scoops, and winget push to separate
+# repos. The default GITHUB_TOKEN scope is the current repo only, so
+# each needs its own PAT exposed as a secret. Uncomment the block once
+# the corresponding secret is configured. The tap, bucket, and v0.1.0
+# WinGet manifests are already bootstrapped by hand and work today;
+# uncommenting just removes the per-release manual bump step.
+#
+# To enable Homebrew auto-bumping:
+#   1. Create a fine-grained PAT with contents read+write on
+#      heidihowilson/homebrew-tap only.
+#   2. Add it as repo secret HOMEBREW_TAP_GITHUB_TOKEN here.
+#   3. Uncomment the `brews:` block below.
+#   4. Tag the next release; the formula will auto-update.
 #
 # brews:
 #   - name: skillscope
