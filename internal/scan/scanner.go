@@ -20,6 +20,7 @@ type SkillRecord struct {
 	Description string
 	Frontmatter map[string]any
 	Body        string
+	Raw         string // original file contents, byte-exact
 	Path        string
 	Scope       harness.Scope
 	Hash        [32]byte
@@ -97,6 +98,7 @@ func parseSkill(path string, scope harness.Scope, mtime time.Time) SkillRecord {
 
 	// Extract YAML frontmatter between --- delimiters.
 	content := string(data)
+	rec.Raw = content
 	fm, body, parseErr := parseFrontmatter(content)
 	rec.Body = body
 	rec.ParseErr = parseErr

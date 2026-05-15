@@ -8,7 +8,74 @@ import (
 	"github.com/heidihowilson/skillscope/internal/harness"
 	"github.com/heidihowilson/skillscope/internal/ops"
 	"github.com/heidihowilson/skillscope/internal/scan"
+	"github.com/heidihowilson/skillscope/internal/ui"
 )
+
+// isScrollingPreview reports whether j/k should scroll the preview body
+// instead of moving the active view's cursor.
+//
+//	Modal: always — preview owns the screen.
+//	Side + Focus on preview pane: yes.
+//	Otherwise: no — j/k navigates skills.
+func (m *Model) isScrollingPreview() bool {
+	if m.PreviewMode == ui.PreviewModal {
+		return true
+	}
+	if m.PreviewMode == ui.PreviewSide && m.Focus == FocusPreview {
+		return true
+	}
+	return false
+}
+
+// previewWidth is the width passed to glamour when rendering the preview
+// for the current mode. Has to match what render.go uses to display it.
+func (m *Model) previewWidth() int {
+	switch m.PreviewMode {
+	case ui.PreviewModal:
+		// Floating modal: ~80% of screen, minus border + padding.
+		w := (m.Width*80)/100 - 4
+		if w < 20 {
+			w = 20
+		}
+		return w
+	case ui.PreviewSide:
+		mainW := (m.Width * 60) / 100
+		w := m.Width - mainW - 1
+		if w < 20 {
+			w = 20
+		}
+		return w
+	}
+	return m.Width
+}
+
+// ensurePreviewRendered returns a tea.Cmd to render the current preview
+// in a goroutine when (and only when) it's open and the cache doesn't
+// already have the result. Returns nil if no work is needed.
+//
+// The glamour pass is too slow to do inline — calling it from Update or
+// View blocks the input loop and produces visible lag on every keystroke.
+// Bubble Tea's pattern: dispatch a Cmd, get a Msg back, store the result.
+func (m *Model) ensurePreviewRendered() tea.Cmd {
+	if m.PreviewMode == ui.PreviewOff {
+		return nil
+	}
+	sk := m.SelectedSkill()
+	if sk == nil {
+		return nil
+	}
+	width := m.previewWidth()
+	if _, ok := m.Preview.Get(sk, width); ok {
+		return nil
+	}
+	skCopy := *sk
+	return func() tea.Msg {
+		return PreviewRenderedMsg{
+			Key:   ui.Key(&skCopy, width),
+			Lines: ui.Render(&skCopy, width),
+		}
+	}
+}
 
 // Init implements tea.Model.
 func (m *Model) Init() tea.Cmd {
@@ -28,13 +95,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
-		return m, nil
+		// Resize changes preview width — kick a re-render if needed.
+		return m, m.ensurePreviewRendered()
 
 	case ScanDoneMsg:
 		m.Loading = false
 		m.LoadErr = msg.Err
 		m.Skills = msg.Skills
 		m.Cursor = 0
+		return m, m.ensurePreviewRendered()
+
+	case PreviewRenderedMsg:
+		// A goroutine finished rendering markdown — store it. View() will
+		// pick it up on the next frame.
+		m.Preview.Set(msg.Key, msg.Lines)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -85,8 +159,9 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "esc":
 		// Priority: preview > search filter > shadowed-only.
-		if m.PreviewMode != 0 {
-			m.PreviewMode = 0
+		if m.PreviewMode != ui.PreviewOff {
+			m.PreviewMode = ui.PreviewOff
+			m.PreviewScroll = 0
 			m.Focus = FocusMain
 			return m, nil
 		}
@@ -106,10 +181,14 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.cycleScopeFilter()
 
 	case "tab":
-		if m.Focus == FocusMain {
-			m.Focus = FocusPreview
-		} else {
-			m.Focus = FocusMain
+		// Only meaningful when the side panel is open. Modal preview
+		// already owns the input; off has nothing to switch to.
+		if m.PreviewMode == ui.PreviewSide {
+			if m.Focus == FocusMain {
+				m.Focus = FocusPreview
+			} else {
+				m.Focus = FocusMain
+			}
 		}
 		return m, nil
 
@@ -128,30 +207,93 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case "p":
-		m.PreviewMode = (m.PreviewMode + 1) % 3
-		return m, nil
+	case " ", "space":
+		// Toggle modal preview.
+		if m.PreviewMode == ui.PreviewModal {
+			m.PreviewMode = ui.PreviewOff
+			m.PreviewScroll = 0
+			return m, nil
+		}
+		m.PreviewMode = ui.PreviewModal
+		m.PreviewScroll = 0
+		m.Focus = FocusMain
+		return m, m.ensurePreviewRendered()
+
+	case "P":
+		// Toggle side panel.
+		if m.PreviewMode == ui.PreviewSide {
+			m.PreviewMode = ui.PreviewOff
+			m.PreviewScroll = 0
+			m.Focus = FocusMain
+			return m, nil
+		}
+		m.PreviewMode = ui.PreviewSide
+		m.PreviewScroll = 0
+		return m, m.ensurePreviewRendered()
 
 	case "g":
 		m.ShadowedOnly = !m.ShadowedOnly
 		m.ClampCursor()
 		return m, nil
 
+	case "r":
+		// Inside a preview, r toggles raw <-> rendered. Otherwise no-op
+		// (uppercase R handles re-scan, which is the action shells expect
+		// for "reload" anyway).
+		if m.PreviewMode != ui.PreviewOff {
+			m.PreviewRendered = !m.PreviewRendered
+			m.PreviewScroll = 0
+			// Rendered cache should already be warm — kicked off when the
+			// preview opened. ensure covers the case where the user toggles
+			// before the goroutine finished.
+			return m, m.ensurePreviewRendered()
+		}
+		return m, nil
+
 	case "R":
+		// Re-scan the filesystem (works in any mode).
 		m.Loading = true
 		m.StatusMsg = ""
 		return m, m.Init()
 
-	// Navigation — let the active view decide what "row" means.
+	// Navigation. j/k normally moves the cursor in the active view; in
+	// modal preview mode (and in side mode when the preview pane is
+	// focused) it scrolls the preview body instead.
 	case "up", "k":
+		if m.isScrollingPreview() {
+			m.PreviewScroll--
+			return m, nil
+		}
 		if len(m.Views) > 0 && m.ActiveView < len(m.Views) {
 			m.Views[m.ActiveView].Navigate(m, -1)
 		}
-		return m, nil
+		// Selected skill probably changed → start preview at the top
+		// and (if preview is open) kick a render for the new selection.
+		m.PreviewScroll = 0
+		return m, m.ensurePreviewRendered()
 
 	case "down", "j":
+		if m.isScrollingPreview() {
+			m.PreviewScroll++
+			return m, nil
+		}
 		if len(m.Views) > 0 && m.ActiveView < len(m.Views) {
 			m.Views[m.ActiveView].Navigate(m, +1)
+		}
+		m.PreviewScroll = 0
+		return m, m.ensurePreviewRendered()
+
+	case "pgup":
+		if m.isScrollingPreview() {
+			m.PreviewScroll -= 10
+			return m, nil
+		}
+		return m, nil
+
+	case "pgdown", "pgdn":
+		if m.isScrollingPreview() {
+			m.PreviewScroll += 10
+			return m, nil
 		}
 		return m, nil
 

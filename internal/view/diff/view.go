@@ -414,7 +414,7 @@ func (vv v) Hints(m *app.Model) []ui.ActionHint {
 	return []ui.ActionHint{
 		{Key: "↑↓", Label: "row"},
 		{Key: "/", Label: "search"},
-		{Key: "p", Label: "preview"},
+		{Key: "Space", Label: "preview"},
 		{Key: "c", Label: "copy"},
 		{Key: "m", Label: "move"},
 	}
