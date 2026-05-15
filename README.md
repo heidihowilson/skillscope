@@ -35,11 +35,21 @@ local-skill        ·                          ·                          ●
 
 ## Install
 
+**Recommended — curl-pipe installer** (Linux + macOS, no Go required):
+
+```sh
+curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh
+```
+
+Pin a version with `SKILLSCOPE_VERSION=v0.1.0 …`. Override the install dir with `SKILLSCOPE_INSTALL_DIR=…`. The script verifies sha256 against the release's `checksums.txt` and refuses to run as root unless `SKILLSCOPE_ACCEPT_ROOT=1` is set.
+
+**Via `go install`:**
+
 ```sh
 go install github.com/heidihowilson/skillscope/cmd/skillscope@latest
 ```
 
-Or from source:
+**From source:**
 
 ```sh
 git clone https://github.com/heidihowilson/skillscope
