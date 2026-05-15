@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: heidihowilson.skillscope
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: heidihowilson
+PublisherUrl: https://github.com/heidihowilson
+PublisherSupportUrl: https://github.com/heidihowilson/skillscope/issues
+PackageName: skillscope
+PackageUrl: https://github.com/heidihowilson/skillscope
+License: MIT
+LicenseUrl: https://github.com/heidihowilson/skillscope/blob/main/LICENSE
+ShortDescription: Fast, pluggable TUI for cross-scope skill-file inspection across every agentic-CLI harness.
+Description: |-
+  skillscope shows every SKILL.md file across every agentic-CLI harness
+  on your machine — Claude Code, Codex CLI, Cursor, OpenCode,
+  Antigravity — broken down by scope (user / project / project-local /
+  plugin) and harness, with copy, move, and delete operations one
+  keystroke away. Plugin-based architecture means new harnesses and
+  visualisations drop in as single self-registering Go files.
+Moniker: skillscope
+Tags:
+  - tui
+  - cli
+  - claude-code
+  - codex
+  - cursor
+  - opencode
+  - antigravity
+  - skill-md
+  - agentic-tools
+  - golang
+ReleaseNotesUrl: https://github.com/heidihowilson/skillscope/releases/tag/v0.1.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

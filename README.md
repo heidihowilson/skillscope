@@ -50,6 +50,8 @@ scoop bucket add heidihowilson https://github.com/heidihowilson/scoop-bucket
 scoop install skillscope
 ```
 
+**WinGet (Windows):** manifests are hand-curated in [`winget/`](winget/) pending submission to [`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs). Once accepted upstream, `winget install heidihowilson.skillscope` will work.
+
 **Via `go install`:**
 
 ```sh

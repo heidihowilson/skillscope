@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+PackageIdentifier: heidihowilson.skillscope
+PackageVersion: 0.1.0
+MinimumOSVersion: 10.0.17763.0
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+  - RelativeFilePath: skillscope.exe
+    PortableCommandAlias: skillscope
+Commands:
+  - skillscope
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/heidihowilson/skillscope/releases/download/v0.1.0/skillscope_0.1.0_windows_x86_64.zip
+    InstallerSha256: CEFB902CF2D1629D0F786BCFA071D37CCB31A2D51E5214394D9E1320F91D7D0B
+ManifestType: installer
+ManifestVersion: 1.6.0

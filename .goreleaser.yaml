@@ -97,6 +97,34 @@ changelog:
 #     description: Fast, pluggable TUI for cross-scope skill-file inspection.
 #     license: MIT
 #     skip_upload: auto
+#
+# winget: pushes a manifest PR to microsoft/winget-pkgs via a fork. Needs
+# a PAT with `public_repo` scope exposed as WINGET_PKGS_GITHUB_TOKEN, and
+# you must first fork microsoft/winget-pkgs to your own account
+# (heidihowilson/winget-pkgs). Hand-curated v0.1.0 manifests live in
+# winget/ as the source of truth until this is wired up.
+#
+# winget:
+#   - name: skillscope
+#     publisher: heidihowilson
+#     license: MIT
+#     license_url: https://github.com/heidihowilson/skillscope/blob/main/LICENSE
+#     homepage: https://github.com/heidihowilson/skillscope
+#     short_description: Fast, pluggable TUI for cross-scope skill-file inspection.
+#     publisher_url: https://github.com/heidihowilson
+#     publisher_support_url: https://github.com/heidihowilson/skillscope/issues
+#     package_identifier: heidihowilson.skillscope
+#     repository:
+#       owner: heidihowilson
+#       name: winget-pkgs
+#       branch: "skillscope-v{{ .Version }}"
+#       token: "{{ .Env.WINGET_PKGS_GITHUB_TOKEN }}"
+#       pull_request:
+#         enabled: true
+#         base:
+#           owner: microsoft
+#           name: winget-pkgs
+#           branch: master
 
 release:
   prerelease: auto
