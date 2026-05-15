@@ -132,25 +132,28 @@
     }
     pre code { background: none; border: none; padding: 0; }
 
+    /* The ASCII demo is a terminal mockup — keep it dark in every theme.
+       Mixing themed bg + hardcoded selected-row bg made the row look like
+       a black redaction bar in light mode (dark fg on dark sel-bg). */
     .ascii {
       font-family: ui-monospace, "JetBrains Mono", monospace;
       font-size: 12px;
       line-height: 1.45;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: #1A202C;
+      border: 1px solid #30363d;
       border-radius: 8px;
       padding: 18px 20px;
       overflow-x: auto;
       white-space: pre;
-      color: var(--fg);
+      color: #E2E8F0;
     }
     .ascii .c   { color: #D97757; }
     .ascii .x   { color: #10A37F; }
     .ascii .cur { color: #F54E00; }
     .ascii .oc  { color: #FFCC00; }
     .ascii .ag  { color: #4285F4; }
-    .ascii .dim { color: var(--fg-dim); }
-    .ascii .sel { background: #2D3748; color: var(--fg); }
+    .ascii .dim { color: #8b949e; }
+    .ascii .sel { background: #2D3748; color: #E2E8F0; }
 
     .features {
       display: grid;
