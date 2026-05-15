@@ -43,6 +43,13 @@ curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh
 
 Pin a version with `SKILLSCOPE_VERSION=v0.1.0 …`. Override the install dir with `SKILLSCOPE_INSTALL_DIR=…`. The script verifies sha256 against the release's `checksums.txt` and refuses to run as root unless `SKILLSCOPE_ACCEPT_ROOT=1` is set.
 
+**Scoop (Windows):**
+
+```powershell
+scoop bucket add heidihowilson https://github.com/heidihowilson/scoop-bucket
+scoop install skillscope
+```
+
 **Via `go install`:**
 
 ```sh
@@ -57,7 +64,7 @@ cd skillscope
 go install ./cmd/skillscope
 ```
 
-Runs on Linux and macOS, Go 1.22+. Single static binary, no CGO.
+Runs on Linux, macOS, and Windows. Go 1.22+. Single static binary, no CGO.
 
 ## Quick start
 

@@ -64,10 +64,12 @@ changelog:
       - "^chore:"
       - "Merge pull request"
 
-# brews: pushes a Homebrew formula to heidihowilson/homebrew-tap on each
-# release. The default GITHUB_TOKEN scope is the current repo only, so
-# cross-repo pushing needs a separate PAT exposed as HOMEBREW_TAP_GITHUB_TOKEN.
-# Uncomment after the tap repo exists AND a PAT secret is configured.
+# Cross-repo publishing — both brews and scoops push to separate repos
+# (heidihowilson/homebrew-tap, heidihowilson/scoop-bucket). The default
+# GITHUB_TOKEN scope is the current repo only, so each needs its own PAT
+# exposed as a secret. Uncomment the block once the corresponding secret
+# is configured. The bucket / tap repos already exist; the initial v0.1.0
+# manifests in both were bootstrapped by hand.
 #
 # brews:
 #   - name: skillscope
@@ -81,6 +83,19 @@ changelog:
 #     license: MIT
 #     test: |
 #       system "#{bin}/skillscope --version"
+#     skip_upload: auto
+#
+# scoops:
+#   - name: skillscope
+#     repository:
+#       owner: heidihowilson
+#       name: scoop-bucket
+#       branch: main
+#       token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
+#     directory: bucket
+#     homepage: https://github.com/heidihowilson/skillscope
+#     description: Fast, pluggable TUI for cross-scope skill-file inspection.
+#     license: MIT
 #     skip_upload: auto
 
 release:
