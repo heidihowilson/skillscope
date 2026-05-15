@@ -84,6 +84,14 @@ type ScanDoneMsg struct {
 	Err    error
 }
 
+// PreviewRenderedMsg carries a finished glamour render back to the event
+// loop. Dispatched by a tea.Cmd running in a goroutine — never block
+// View() or Update() on the actual render.
+type PreviewRenderedMsg struct {
+	Key   string
+	Lines []string
+}
+
 // Model is the single source of truth for all app state.
 type Model struct {
 	// Infrastructure
@@ -109,6 +117,14 @@ type Model struct {
 	Cursor      int // index in FilteredSkills()
 	Focus       FocusPanel
 	PreviewMode ui.PreviewMode
+
+	// Preview state. PreviewScroll is the current vertical scroll offset
+	// within the preview body. PreviewRendered toggles between raw file
+	// content (default — fast, no glamour pass) and the glamour-rendered
+	// markdown (R toggles). Preview caches the expensive rendered output.
+	PreviewScroll   int
+	PreviewRendered bool
+	Preview         ui.Preview
 
 	// Operation overlay
 	OpMode   OpMode
