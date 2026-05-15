@@ -132,6 +132,36 @@
     }
     pre code { background: none; border: none; padding: 0; }
 
+    /* Primary install CTA — bigger, brighter, copy-friendly. */
+    .cta {
+      margin: 28px 0 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .cta-label {
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin-bottom: 10px;
+    }
+    .cta pre {
+      font-size: 16px;
+      margin: 0;
+      background: var(--bg);
+      border-color: var(--border);
+    }
+    .cta-meta {
+      margin: 12px 0 0;
+      font-size: 13px;
+      color: var(--fg-dim);
+    }
+    .cta-meta a { color: var(--fg-dim); text-decoration: underline; text-decoration-color: var(--border); }
+    .cta-meta a:hover { color: var(--fg); }
+
     /* The ASCII demo is a terminal mockup — keep it dark in every theme.
        Mixing themed bg + hardcoded selected-row bg made the row look like
        a black redaction bar in light mode (dark fg on dark sel-bg). */
@@ -230,43 +260,12 @@
       </div>
     </header>
 
-    <!-- INSTALL -->
-    <h2>Install</h2>
-
-    <h3>curl-pipe (Linux + macOS)</h3>
-    <pre><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></pre>
-    <p>Picks the first writable directory on your <code>PATH</code>. Pin a version with <code>SKILLSCOPE_VERSION=v0.2.0</code>. sha256-verified against the release's <code>checksums.txt</code>.</p>
-
-    <h3>Homebrew (macOS + Linux)</h3>
-    <pre><code>brew install heidihowilson/tap/skillscope</code></pre>
-
-    <h3>Scoop (Windows)</h3>
-    <pre><code>scoop bucket add heidihowilson https://github.com/heidihowilson/scoop-bucket
-scoop install skillscope</code></pre>
-
-    <h3>go install</h3>
-    <pre><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></pre>
-
-    <p>Pre-built binaries for Linux / macOS / Windows ship with every release — see the <a href="https://github.com/heidihowilson/skillscope/releases">Releases page</a>.</p>
-
-    <!-- UPDATE -->
-    <h2>Update</h2>
-    <p>Use the same channel you installed from:</p>
-
-    <h3>curl-pipe</h3>
-    <pre><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></pre>
-    <p>Re-run the installer — it always grabs the latest release and overwrites the existing binary.</p>
-
-    <h3>Homebrew</h3>
-    <pre><code>brew update &amp;&amp; brew upgrade skillscope</code></pre>
-
-    <h3>Scoop</h3>
-    <pre><code>scoop update skillscope</code></pre>
-
-    <h3>go install</h3>
-    <pre><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></pre>
-
-    <p>Check what you're running with <code>skillscope --version</code>.</p>
+    <!-- PRIMARY INSTALL CTA -->
+    <div class="cta">
+      <div class="cta-label">Install — Linux + macOS</div>
+      <pre><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></pre>
+      <p class="cta-meta">No Go required. Picks a writable directory on your <code>PATH</code>, sha256-verified against the release's <code>checksums.txt</code>. <a href="#other-install">Windows, Homebrew, and other methods ↓</a></p>
+    </div>
 
     <!-- DEMO -->
     <h2>What it looks like</h2>
@@ -319,6 +318,30 @@ test-skill         <span class="c">●</span>                          <span cla
         <p>No CGO. Linux / macOS / Windows. Ships pre-built via GitHub Releases on every tag.</p>
       </div>
     </div>
+
+    <!-- OTHER INSTALL METHODS + UPDATE -->
+    <h2 id="other-install">Other ways to install</h2>
+
+    <h3>Homebrew (macOS + Linux)</h3>
+    <pre><code>brew install heidihowilson/tap/skillscope</code></pre>
+
+    <h3>Scoop (Windows)</h3>
+    <pre><code>scoop bucket add heidihowilson https://github.com/heidihowilson/scoop-bucket
+scoop install skillscope</code></pre>
+
+    <h3>go install</h3>
+    <pre><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></pre>
+
+    <p>Pre-built binaries also live on the <a href="https://github.com/heidihowilson/skillscope/releases">Releases page</a>. Pin a version with the curl-pipe installer via <code>SKILLSCOPE_VERSION=v0.2.0</code>.</p>
+
+    <h2>Update</h2>
+    <p>Use the same channel you installed from. Check what you're running with <code>skillscope --version</code>.</p>
+    <table>
+      <tr><td>curl-pipe</td><td><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></td></tr>
+      <tr><td>Homebrew</td><td><code>brew update &amp;&amp; brew upgrade skillscope</code></td></tr>
+      <tr><td>Scoop</td><td><code>scoop update skillscope</code></td></tr>
+      <tr><td>go install</td><td><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></td></tr>
+    </table>
 
     <!-- KEYMAP -->
     <h2>Keymap, in one screen</h2>
