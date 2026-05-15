@@ -24,37 +24,60 @@ func (h) Scopes(ctx harness.Context) []harness.Scope {
 		scopes = append(scopes, harness.Scope{Harness: "claude-code", Kind: harness.User, Path: p})
 	}
 
-	// Plugin scopes. Real Claude Code layout is:
-	//   ~/.claude/plugins/marketplaces/<marketplace>/{plugins,external_plugins}/<plugin>/skills
-	// Older docs/code assumed a flat ~/.claude/plugins/<plugin>/skills, which doesn't
-	// match what `/plugin install` actually creates — keep both for resilience.
-	pluginBase := filepath.Join(home, ".claude", "plugins")
-	addPlugin := func(p string) {
-		scopes = append(scopes, harness.Scope{
-			Harness:  "claude-code",
-			Kind:     harness.Plugin,
-			Path:     p,
-			ReadOnly: true,
-		})
-	}
-	for _, glob := range []string{
-		filepath.Join(pluginBase, "*", "skills"),
-		filepath.Join(pluginBase, "marketplaces", "*", "plugins", "*", "skills"),
-		filepath.Join(pluginBase, "marketplaces", "*", "external_plugins", "*", "skills"),
-	} {
-		matches, _ := filepath.Glob(glob)
-		for _, m := range matches {
-			addPlugin(m)
-		}
-	}
+	// User-scope plugins (~/.claude/plugins/...).
+	scopes = append(scopes, pluginScopesIn(filepath.Join(home, ".claude", "plugins"))...)
 
 	if ctx.RepoRoot != "" {
 		scopes = append(scopes,
 			harness.Scope{Harness: "claude-code", Kind: harness.Project, Path: filepath.Join(ctx.RepoRoot, ".claude", "skills")},
 			harness.Scope{Harness: "claude-code", Kind: harness.ProjectLocal, Path: filepath.Join(ctx.RepoRoot, ".claude", "skills.local")},
 		)
+		// Project-scope plugins (<repo>/.claude/plugins/...). Per Claude
+		// Code docs, `/plugin install --scope project` lands files here
+		// and `.claude/settings.json` enables them for collaborators.
+		scopes = append(scopes, pluginScopesIn(filepath.Join(ctx.RepoRoot, ".claude", "plugins"))...)
 	}
 	return scopes
+}
+
+// pluginScopesIn expands the known plugin layout patterns under `base`
+// into individual Plugin scopes. Covers:
+//
+//   - flat:                          base/<plugin>/skills
+//   - marketplace:                   base/marketplaces/<mkt>/plugins/<plugin>/skills
+//   - marketplace (external):        base/marketplaces/<mkt>/external_plugins/<plugin>/skills
+//   - cache + marketplace:           base/cache/marketplaces/<mkt>/plugins/<plugin>/skills
+//   - cache + marketplace (ext):     base/cache/marketplaces/<mkt>/external_plugins/<plugin>/skills
+//
+// Claude Code docs mention a `~/.claude/plugins/cache/` location ("plugins
+// are copied to a cache") but the empirical install layout is the non-
+// cache marketplace path. Scanning both protects against either shape.
+func pluginScopesIn(base string) []harness.Scope {
+	patterns := []string{
+		filepath.Join(base, "*", "skills"),
+		filepath.Join(base, "marketplaces", "*", "plugins", "*", "skills"),
+		filepath.Join(base, "marketplaces", "*", "external_plugins", "*", "skills"),
+		filepath.Join(base, "cache", "marketplaces", "*", "plugins", "*", "skills"),
+		filepath.Join(base, "cache", "marketplaces", "*", "external_plugins", "*", "skills"),
+	}
+	var out []harness.Scope
+	seen := map[string]bool{}
+	for _, pat := range patterns {
+		matches, _ := filepath.Glob(pat)
+		for _, m := range matches {
+			if seen[m] {
+				continue
+			}
+			seen[m] = true
+			out = append(out, harness.Scope{
+				Harness:  "claude-code",
+				Kind:     harness.Plugin,
+				Path:     m,
+				ReadOnly: true,
+			})
+		}
+	}
+	return out
 }
 
 func init() { harness.Register(h{}) }
