@@ -7,6 +7,19 @@ and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-15
+
+### Added
+- Floating preview modal with async Glamour rendering and a raw-first toggle (#40).
+- Distribution: curl-pipe `install.sh`, Homebrew tap formula, Scoop manifest, and WinGet manifest set (#34, #35, #36, #37).
+
+### Fixed
+- Claude Code plugin scope now scans the real marketplace layout
+  (`~/.claude/plugins/marketplaces/<mkt>/{plugins,external_plugins}/<plugin>/skills`),
+  so plugin-installed skills actually show up (#41).
+- `install.sh` picks a PATH-reachable install dir on macOS (#39).
+- ASCII demo readable in light-mode README (#38).
+
 ## [0.1.0] — 2026-05-14
 
 Initial public release.
