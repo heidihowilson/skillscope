@@ -232,8 +232,41 @@
 
     <!-- INSTALL -->
     <h2>Install</h2>
+
+    <h3>curl-pipe (Linux + macOS)</h3>
+    <pre><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></pre>
+    <p>Picks the first writable directory on your <code>PATH</code>. Pin a version with <code>SKILLSCOPE_VERSION=v0.2.0</code>. sha256-verified against the release's <code>checksums.txt</code>.</p>
+
+    <h3>Homebrew (macOS + Linux)</h3>
+    <pre><code>brew install heidihowilson/tap/skillscope</code></pre>
+
+    <h3>Scoop (Windows)</h3>
+    <pre><code>scoop bucket add heidihowilson https://github.com/heidihowilson/scoop-bucket
+scoop install skillscope</code></pre>
+
+    <h3>go install</h3>
     <pre><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></pre>
+
     <p>Pre-built binaries for Linux / macOS / Windows ship with every release — see the <a href="https://github.com/heidihowilson/skillscope/releases">Releases page</a>.</p>
+
+    <!-- UPDATE -->
+    <h2>Update</h2>
+    <p>Use the same channel you installed from:</p>
+
+    <h3>curl-pipe</h3>
+    <pre><code>curl -sSL https://heidihowilson.github.io/skillscope/install.sh | sh</code></pre>
+    <p>Re-run the installer — it always grabs the latest release and overwrites the existing binary.</p>
+
+    <h3>Homebrew</h3>
+    <pre><code>brew update &amp;&amp; brew upgrade skillscope</code></pre>
+
+    <h3>Scoop</h3>
+    <pre><code>scoop update skillscope</code></pre>
+
+    <h3>go install</h3>
+    <pre><code>go install github.com/heidihowilson/skillscope/cmd/skillscope@latest</code></pre>
+
+    <p>Check what you're running with <code>skillscope --version</code>.</p>
 
     <!-- DEMO -->
     <h2>What it looks like</h2>
