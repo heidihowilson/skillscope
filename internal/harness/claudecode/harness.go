@@ -1,7 +1,6 @@
 package claudecode
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/charmbracelet/lipgloss"
@@ -25,18 +24,27 @@ func (h) Scopes(ctx harness.Context) []harness.Scope {
 		scopes = append(scopes, harness.Scope{Harness: "claude-code", Kind: harness.User, Path: p})
 	}
 
-	// Plugin scopes: expand ~/.claude/plugins/*/skills
+	// Plugin scopes. Real Claude Code layout is:
+	//   ~/.claude/plugins/marketplaces/<marketplace>/{plugins,external_plugins}/<plugin>/skills
+	// Older docs/code assumed a flat ~/.claude/plugins/<plugin>/skills, which doesn't
+	// match what `/plugin install` actually creates — keep both for resilience.
 	pluginBase := filepath.Join(home, ".claude", "plugins")
-	if entries, err := os.ReadDir(pluginBase); err == nil {
-		for _, e := range entries {
-			if e.IsDir() {
-				scopes = append(scopes, harness.Scope{
-					Harness:  "claude-code",
-					Kind:     harness.Plugin,
-					Path:     filepath.Join(pluginBase, e.Name(), "skills"),
-					ReadOnly: true,
-				})
-			}
+	addPlugin := func(p string) {
+		scopes = append(scopes, harness.Scope{
+			Harness:  "claude-code",
+			Kind:     harness.Plugin,
+			Path:     p,
+			ReadOnly: true,
+		})
+	}
+	for _, glob := range []string{
+		filepath.Join(pluginBase, "*", "skills"),
+		filepath.Join(pluginBase, "marketplaces", "*", "plugins", "*", "skills"),
+		filepath.Join(pluginBase, "marketplaces", "*", "external_plugins", "*", "skills"),
+	} {
+		matches, _ := filepath.Glob(glob)
+		for _, m := range matches {
+			addPlugin(m)
 		}
 	}
 
